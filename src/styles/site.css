@@ -2167,14 +2167,20 @@ textarea {
 		width: 95%;
 	}
 
+	.route-home .home-shell {
+		padding-top: 5rem;
+	}
+
 	.route-home .site-header {
-		position: sticky;
-		top: 0;
-		padding-top: 0.34rem;
+		position: fixed;
+		top: 8px;
+		left: 0;
+		right: 0;
+		padding-top: 0;
 	}
 
 	.route-home .site-header .nav-wrap {
-		margin-bottom: 0.38rem;
+		margin-bottom: 0;
 	}
 
 	.nav-wrap {
@@ -2618,6 +2624,10 @@ textarea {
 @media (max-width: 520px) {
 	.home-shell {
 		width: 96%;
+	}
+
+	.route-home .home-shell {
+		padding-top: 4.7rem;
 	}
 
 	.hero-panel,
