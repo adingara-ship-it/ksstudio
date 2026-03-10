@@ -21,6 +21,14 @@ function getOptionalEnv(name: string) {
 	return import.meta.env[name] || "";
 }
 
+function getFirstEnvValue(names: string[]) {
+	for (const name of names) {
+		const value = getOptionalEnv(name).trim();
+		if (value) return value;
+	}
+	return "";
+}
+
 function isPlaceholderValue(value: string) {
 	const lower = value.toLowerCase();
 	return (
@@ -28,6 +36,13 @@ function isPlaceholderValue(value: string) {
 		lower.includes("change-this") ||
 		lower.includes("your_")
 	);
+}
+
+function parseSmtpPort(rawValue: string) {
+	const parsed = Number.parseInt(rawValue, 10);
+	if (!Number.isInteger(parsed)) return 587;
+	if (parsed < 1 || parsed > 65535) return 587;
+	return parsed;
 }
 
 function formatBookingDate(iso: string) {
@@ -204,10 +219,10 @@ function detailRow(label: string, value: string) {
 }
 
 function getTransporter() {
-	const host = getOptionalEnv("SMTP_HOST");
-	const port = Number(getOptionalEnv("SMTP_PORT") || 587);
-	const user = getOptionalEnv("SMTP_USER");
-	const pass = getOptionalEnv("SMTP_PASS");
+	const host = getFirstEnvValue(["SMTP_HOST"]);
+	const port = parseSmtpPort(getFirstEnvValue(["SMTP_PORT"]));
+	const user = getFirstEnvValue(["SMTP_USER", "SMTP_USERNAME"]);
+	const pass = getFirstEnvValue(["SMTP_PASS", "SMTP_PASSWORD"]);
 
 	if (!host || !user || !pass) return null;
 	if (isPlaceholderValue(host) || isPlaceholderValue(user) || isPlaceholderValue(pass)) return null;
@@ -228,8 +243,8 @@ export async function sendBookingConfirmationEmails(payload: BookingMailPayload)
 	const transporter = getTransporter();
 	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 
-	const from = getOptionalEnv("SMTP_FROM");
-	const ownerEmail = getOptionalEnv("BOOKING_OWNER_EMAIL");
+	const from = getFirstEnvValue(["SMTP_FROM", "MAIL_FROM", "EMAIL_FROM"]);
+	const ownerEmail = getFirstEnvValue(["BOOKING_OWNER_EMAIL"]);
 	if (!from || !ownerEmail) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 	if (isPlaceholderValue(from) || isPlaceholderValue(ownerEmail)) {
 		return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
@@ -323,8 +338,8 @@ export async function sendBookingCancellationEmails(payload: BookingMailPayload)
 	const transporter = getTransporter();
 	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 
-	const from = getOptionalEnv("SMTP_FROM");
-	const ownerEmail = getOptionalEnv("BOOKING_OWNER_EMAIL");
+	const from = getFirstEnvValue(["SMTP_FROM", "MAIL_FROM", "EMAIL_FROM"]);
+	const ownerEmail = getFirstEnvValue(["BOOKING_OWNER_EMAIL"]);
 	if (!from || !ownerEmail) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 	if (isPlaceholderValue(from) || isPlaceholderValue(ownerEmail)) {
 		return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
@@ -417,8 +432,8 @@ export async function sendContactRequestEmail(payload: ContactMailPayload) {
 	const transporter = getTransporter();
 	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 
-	const from = getOptionalEnv("SMTP_FROM");
-	const ownerEmail = getOptionalEnv("CONTACT_OWNER_EMAIL") || getOptionalEnv("BOOKING_OWNER_EMAIL");
+	const from = getFirstEnvValue(["SMTP_FROM", "MAIL_FROM", "EMAIL_FROM"]);
+	const ownerEmail = getFirstEnvValue(["CONTACT_OWNER_EMAIL", "BOOKING_OWNER_EMAIL"]);
 	if (!from || !ownerEmail) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 	if (isPlaceholderValue(from) || isPlaceholderValue(ownerEmail)) {
 		return { sent: false, reason: "SMTP_NOT_CONFIGURED" };

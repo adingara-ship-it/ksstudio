@@ -78,24 +78,22 @@ export const POST: APIRoute = async ({ request }) => {
 		email: bookingRow.email as string
 	};
 
-	// Repond vite au client: l'envoi email part en arriere-plan pour eviter l'attente.
-	queueMicrotask(() => {
-		sendBookingConfirmationEmails(emailPayload)
-			.then((emailStatus) => {
-				if (!emailStatus.sent) {
-					console.error("BOOKING_CONFIRMATION_MAIL_FAILED", {
-						bookingId: bookingRow.id,
-						reason: emailStatus.reason ?? "UNKNOWN"
-					});
-				}
-			})
-			.catch((error) => {
-				console.error("BOOKING_CONFIRMATION_MAIL_ERROR", {
-					bookingId: bookingRow.id,
-					error: error instanceof Error ? error.message : "UNKNOWN"
-				});
+	let emailStatus: { sent: boolean; reason?: string } = { sent: true };
+	try {
+		emailStatus = await sendBookingConfirmationEmails(emailPayload);
+		if (!emailStatus.sent) {
+			console.error("BOOKING_CONFIRMATION_MAIL_FAILED", {
+				bookingId: bookingRow.id,
+				reason: emailStatus.reason ?? "UNKNOWN"
 			});
-	});
+		}
+	} catch (error) {
+		emailStatus = { sent: false, reason: "MAIL_SEND_FAILED" };
+		console.error("BOOKING_CONFIRMATION_MAIL_ERROR", {
+			bookingId: bookingRow.id,
+			error: error instanceof Error ? error.message : "UNKNOWN"
+		});
+	}
 
 	return json(201, {
 		success: true,
@@ -106,8 +104,6 @@ export const POST: APIRoute = async ({ request }) => {
 			firstName: bookingRow.first_name,
 			lastName: bookingRow.last_name
 		},
-		emailStatus: {
-			queued: true
-		}
+		emailStatus
 	});
 };

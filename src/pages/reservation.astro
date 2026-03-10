@@ -423,10 +423,6 @@ import { SERVICE_OPTIONS } from "../lib/services";
 					if (result?.emailStatus?.sent) {
 						confirmationNoteNode.textContent = "Un e-mail de confirmation vient d’être envoyé.";
 						setStatus("Réservation enregistrée avec succès.", "success");
-					} else if (result?.emailStatus?.queued) {
-						confirmationNoteNode.textContent =
-							"Réservation enregistrée. L’e-mail de confirmation arrive dans quelques instants.";
-						setStatus("Réservation enregistrée avec succès.", "success");
 					} else {
 						confirmationNoteNode.textContent =
 							"Réservation enregistrée, mais l’e-mail de confirmation n’a pas pu être envoyé pour le moment.";

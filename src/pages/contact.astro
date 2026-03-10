@@ -180,8 +180,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 					form.reset();
 					setStatus("Message envoyé. Nous vous répondrons rapidement.", "success");
-				} catch {
-					setStatus("Envoi impossible pour le moment. Réessayez dans quelques instants.", "error");
+				} catch (error) {
+					const failureCode = error instanceof Error ? error.message : "CONTACT_SEND_FAILED";
+					const message =
+						failureCode === "SMTP_NOT_CONFIGURED"
+							? "Le service e-mail n'est pas configuré côté serveur. Merci de réessayer plus tard."
+							: "Envoi impossible pour le moment. Réessayez dans quelques instants.";
+					setStatus(message, "error");
 				} finally {
 					submitButton.disabled = false;
 					submitButton.textContent = "Envoyer le message";
