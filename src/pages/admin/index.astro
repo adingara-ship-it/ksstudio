@@ -638,9 +638,10 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 						return;
 					}
 					const code = String(result?.error ?? "UNKNOWN");
+					const details = String(result?.details ?? "").trim();
 					setStatus(
 						availabilityStatus,
-						`Impossible de supprimer ce créneau (${code}).`,
+						`Impossible de supprimer ce créneau (${code}${details ? `: ${details}` : ""}).`,
 						"error"
 					);
 					return;
@@ -683,7 +684,12 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 						return;
 					}
 					const code = String(result?.error ?? "UNKNOWN");
-					setStatus(bookingStatus, `Échec de l'annulation (${code}).`, "error");
+					const details = String(result?.details ?? "").trim();
+					setStatus(
+						bookingStatus,
+						`Échec de l'annulation (${code}${details ? `: ${details}` : ""}).`,
+						"error"
+					);
 					return;
 				}
 
