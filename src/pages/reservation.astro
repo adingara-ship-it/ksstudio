@@ -428,6 +428,12 @@ import { SERVICE_OPTIONS } from "../lib/services";
 						if (reason === "SMTP_NOT_CONFIGURED") {
 							confirmationNoteNode.textContent =
 								"Réservation enregistrée, mais la configuration e-mail du serveur est incomplète.";
+						} else if (reason === "SMTP_AUTH_FAILED") {
+							confirmationNoteNode.textContent =
+								"Réservation enregistrée, mais l'authentification SMTP a échoué.";
+						} else if (reason === "SMTP_CONNECTION_FAILED") {
+							confirmationNoteNode.textContent =
+								"Réservation enregistrée, mais la connexion au serveur e-mail a échoué.";
 						} else if (reason === "CLIENT_MAIL_FAILED" || reason === "MAIL_SEND_FAILED") {
 							confirmationNoteNode.textContent =
 								"Réservation enregistrée, mais le serveur e-mail a refusé l'envoi.";

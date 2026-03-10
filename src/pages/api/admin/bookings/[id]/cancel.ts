@@ -94,72 +94,82 @@ async function reopenSlotAfterCancellation({
 }
 
 export const POST: APIRoute = async (context) => {
-	if (!ensureAdmin(context)) return json(401, { error: "UNAUTHORIZED" });
-	if (!isSameOriginRequest(context.request, context.url.origin)) {
-		return json(403, { error: "ORIGIN_FORBIDDEN" });
-	}
+	try {
+		if (!ensureAdmin(context)) return json(401, { error: "UNAUTHORIZED" });
+		if (!isSameOriginRequest(context.request, context.url.origin)) {
+			return json(403, { error: "ORIGIN_FORBIDDEN" });
+		}
 
-	const bookingId = context.params.id;
-	if (!bookingId) return json(400, { error: "BOOKING_ID_REQUIRED" });
+		const bookingId = context.params.id;
+		if (!bookingId) return json(400, { error: "BOOKING_ID_REQUIRED" });
 
-	const { data: bookingRow, error: fetchError } = await supabaseAdmin
-		.from("bookings")
-		.select(
-			"id, service_name, slot_at, first_name, last_name, phone, email, status, slot_id"
-		)
-		.eq("id", bookingId)
-		.single();
+		const { data: bookingRow, error: fetchError } = await supabaseAdmin
+			.from("bookings")
+			.select(
+				"id, service_name, slot_at, first_name, last_name, phone, email, status, slot_id"
+			)
+			.eq("id", bookingId)
+			.single();
 
-	if (fetchError || !bookingRow) return json(404, { error: "BOOKING_NOT_FOUND" });
+		if (fetchError || !bookingRow) return json(404, { error: "BOOKING_NOT_FOUND" });
 
-	if (bookingRow.status === "cancelled") {
+		if (bookingRow.status === "cancelled") {
+			const slotStatus = await reopenSlotAfterCancellation({
+				bookingId: bookingRow.id as string,
+				slotId: bookingRow.slot_id,
+				slotAtIso: bookingRow.slot_at
+			});
+			return json(200, { success: true, alreadyCancelled: true, slotStatus });
+		}
+
+		const { error: cancelError } = await supabaseAdmin
+			.from("bookings")
+			.update({
+				status: "cancelled",
+				cancelled_at: new Date().toISOString()
+			})
+			.eq("id", bookingId);
+
+		if (cancelError) {
+			return json(500, { error: "BOOKING_CANCEL_FAILED", details: cancelError.message });
+		}
+
 		const slotStatus = await reopenSlotAfterCancellation({
 			bookingId: bookingRow.id as string,
 			slotId: bookingRow.slot_id,
 			slotAtIso: bookingRow.slot_at
 		});
-		return json(200, { success: true, alreadyCancelled: true, slotStatus });
+
+		if (!slotStatus.reopened) {
+			console.error("BOOKING_SLOT_REOPEN_FAILED", {
+				bookingId: bookingRow.id,
+				reason: slotStatus.reason ?? "UNKNOWN",
+				details: slotStatus.details ?? ""
+			});
+		}
+
+		let emailStatus: { sent: boolean; reason?: string; details?: string } = { sent: true };
+		try {
+			emailStatus = await sendBookingCancellationEmails({
+				serviceName: bookingRow.service_name as string,
+				slotAtIso: bookingRow.slot_at as string,
+				firstName: bookingRow.first_name as string,
+				lastName: bookingRow.last_name as string,
+				phone: bookingRow.phone as string,
+				email: bookingRow.email as string
+			});
+		} catch (error) {
+			emailStatus = {
+				sent: false,
+				reason: "MAIL_SEND_FAILED",
+				details: error instanceof Error ? error.message : "UNKNOWN"
+			};
+		}
+
+		return json(200, { success: true, emailStatus, slotStatus });
+	} catch (error) {
+		const details = error instanceof Error ? error.message : "UNKNOWN";
+		console.error("BOOKING_CANCEL_UNHANDLED", { details });
+		return json(500, { error: "INTERNAL_ERROR", details });
 	}
-
-	const { error: cancelError } = await supabaseAdmin
-		.from("bookings")
-		.update({
-			status: "cancelled",
-			cancelled_at: new Date().toISOString()
-		})
-		.eq("id", bookingId);
-
-	if (cancelError) {
-		return json(500, { error: "BOOKING_CANCEL_FAILED", details: cancelError.message });
-	}
-
-	const slotStatus = await reopenSlotAfterCancellation({
-		bookingId: bookingRow.id as string,
-		slotId: bookingRow.slot_id,
-		slotAtIso: bookingRow.slot_at
-	});
-
-	if (!slotStatus.reopened) {
-		console.error("BOOKING_SLOT_REOPEN_FAILED", {
-			bookingId: bookingRow.id,
-			reason: slotStatus.reason ?? "UNKNOWN",
-			details: slotStatus.details ?? ""
-		});
-	}
-
-	let emailStatus: { sent: boolean; reason?: string } = { sent: true };
-	try {
-		emailStatus = await sendBookingCancellationEmails({
-			serviceName: bookingRow.service_name as string,
-			slotAtIso: bookingRow.slot_at as string,
-			firstName: bookingRow.first_name as string,
-			lastName: bookingRow.last_name as string,
-			phone: bookingRow.phone as string,
-			email: bookingRow.email as string
-		});
-	} catch {
-		emailStatus = { sent: false, reason: "MAIL_SEND_FAILED" };
-	}
-
-	return json(200, { success: true, emailStatus, slotStatus });
 };

@@ -17,6 +17,42 @@ interface ContactMailPayload {
 	message: string;
 }
 
+type MailFailureReason =
+	| "SMTP_AUTH_FAILED"
+	| "SMTP_CONNECTION_FAILED"
+	| "SMTP_SEND_FAILED"
+	| "MAIL_SEND_FAILED";
+
+interface MailResult {
+	sent: boolean;
+	reason?: MailFailureReason;
+	details?: string;
+}
+
+function mapSmtpError(error: unknown): MailResult {
+	const fallback: MailResult = { sent: false, reason: "SMTP_SEND_FAILED", details: "UNKNOWN" };
+	if (!(error instanceof Error)) return fallback;
+
+	const smtpError = error as Error & {
+		code?: string;
+		responseCode?: number;
+		command?: string;
+	};
+	const code = String(smtpError.code ?? "").toUpperCase();
+	const reason =
+		code === "EAUTH"
+			? "SMTP_AUTH_FAILED"
+			: code === "ESOCKET" ||
+				  code === "ECONNECTION" ||
+				  code === "ETIMEDOUT" ||
+				  code === "EDNS"
+				? "SMTP_CONNECTION_FAILED"
+				: "SMTP_SEND_FAILED";
+
+	const details = smtpError.message || "UNKNOWN";
+	return { sent: false, reason, details };
+}
+
 function getOptionalEnv(name: string) {
 	return import.meta.env[name] || "";
 }
@@ -63,16 +99,21 @@ function getBookingOwnerEmail() {
 	return ownerEmail;
 }
 
-async function sendMailSafe(transporter: nodemailer.Transporter, options: nodemailer.SendMailOptions) {
+async function sendMailSafe(
+	transporter: nodemailer.Transporter,
+	options: nodemailer.SendMailOptions
+): Promise<MailResult> {
 	try {
 		await transporter.sendMail(options);
-		return true;
+		return { sent: true };
 	} catch (error) {
+		const failure = mapSmtpError(error);
 		console.error("SMTP_SEND_FAILED", {
-			reason: error instanceof Error ? error.message : "UNKNOWN",
+			reason: failure.reason ?? "SMTP_SEND_FAILED",
+			details: failure.details ?? "UNKNOWN",
 			to: String(options.to ?? "")
 		});
-		return false;
+		return failure;
 	}
 }
 
@@ -253,7 +294,8 @@ function getTransporter() {
 	const host = getFirstEnvValue(["SMTP_HOST"]);
 	const port = parseSmtpPort(getFirstEnvValue(["SMTP_PORT"]));
 	const user = getFirstEnvValue(["SMTP_USER", "SMTP_USERNAME"]);
-	const pass = getFirstEnvValue(["SMTP_PASS", "SMTP_PASSWORD"]);
+	const passRaw = getFirstEnvValue(["SMTP_PASS", "SMTP_PASSWORD"]);
+	const pass = passRaw.includes(" ") ? passRaw.replaceAll(" ", "") : passRaw;
 
 	if (!host || !user || !pass) return null;
 	if (isPlaceholderValue(host) || isPlaceholderValue(user) || isPlaceholderValue(pass)) return null;
@@ -262,7 +304,10 @@ function getTransporter() {
 		host,
 		port,
 		secure: port === 465,
-		auth: { user, pass }
+		auth: { user, pass },
+		connectionTimeout: 10_000,
+		greetingTimeout: 10_000,
+		socketTimeout: 15_000
 	});
 }
 
@@ -272,10 +317,10 @@ function shouldSendEmails() {
 
 export async function sendBookingConfirmationEmails(payload: BookingMailPayload) {
 	const transporter = getTransporter();
-	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" as const };
 
 	const from = getConfiguredFromAddress();
-	if (!from) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+	if (!from) return { sent: false, reason: "SMTP_NOT_CONFIGURED" as const };
 
 	const ownerEmail = getBookingOwnerEmail();
 
@@ -343,7 +388,7 @@ Date: ${formattedDate}`;
 		}
 	);
 
-	const clientSent = await sendMailSafe(transporter, {
+	const clientResult = await sendMailSafe(transporter, {
 		from,
 		to: payload.email,
 		subject: clientSubject,
@@ -351,15 +396,19 @@ Date: ${formattedDate}`;
 		html: clientHtml
 	});
 
-	if (!clientSent) {
-		return { sent: false, reason: "CLIENT_MAIL_FAILED" };
+	if (!clientResult.sent) {
+		return {
+			sent: false,
+			reason: clientResult.reason ?? "CLIENT_MAIL_FAILED",
+			details: clientResult.details
+		};
 	}
 
 	if (!ownerEmail) {
 		return { sent: true, reason: "OWNER_EMAIL_MISSING" };
 	}
 
-	const ownerSent = await sendMailSafe(transporter, {
+	const ownerResult = await sendMailSafe(transporter, {
 		from,
 		to: ownerEmail,
 		subject: ownerSubject,
@@ -367,15 +416,17 @@ Date: ${formattedDate}`;
 		html: ownerHtml
 	});
 
-	return ownerSent ? { sent: true } : { sent: true, reason: "OWNER_MAIL_FAILED" };
+	return ownerResult.sent
+		? { sent: true }
+		: { sent: true, reason: "OWNER_MAIL_FAILED", details: ownerResult.details };
 }
 
 export async function sendBookingCancellationEmails(payload: BookingMailPayload) {
 	const transporter = getTransporter();
-	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" as const };
 
 	const from = getConfiguredFromAddress();
-	if (!from) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+	if (!from) return { sent: false, reason: "SMTP_NOT_CONFIGURED" as const };
 
 	const ownerEmail = getBookingOwnerEmail();
 
@@ -442,7 +493,7 @@ Date initiale: ${formattedDate}`;
 		}
 	);
 
-	const clientSent = await sendMailSafe(transporter, {
+	const clientResult = await sendMailSafe(transporter, {
 		from,
 		to: payload.email,
 		subject: clientSubject,
@@ -450,15 +501,19 @@ Date initiale: ${formattedDate}`;
 		html: clientHtml
 	});
 
-	if (!clientSent) {
-		return { sent: false, reason: "CLIENT_MAIL_FAILED" };
+	if (!clientResult.sent) {
+		return {
+			sent: false,
+			reason: clientResult.reason ?? "CLIENT_MAIL_FAILED",
+			details: clientResult.details
+		};
 	}
 
 	if (!ownerEmail) {
 		return { sent: true, reason: "OWNER_EMAIL_MISSING" };
 	}
 
-	const ownerSent = await sendMailSafe(transporter, {
+	const ownerResult = await sendMailSafe(transporter, {
 		from,
 		to: ownerEmail,
 		subject: ownerSubject,
@@ -466,18 +521,20 @@ Date initiale: ${formattedDate}`;
 		html: ownerHtml
 	});
 
-	return ownerSent ? { sent: true } : { sent: true, reason: "OWNER_MAIL_FAILED" };
+	return ownerResult.sent
+		? { sent: true }
+		: { sent: true, reason: "OWNER_MAIL_FAILED", details: ownerResult.details };
 }
 
 export async function sendContactRequestEmail(payload: ContactMailPayload) {
 	const transporter = getTransporter();
-	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" as const };
 
 	const from = getConfiguredFromAddress();
 	const ownerEmail = getFirstEnvValue(["CONTACT_OWNER_EMAIL", "BOOKING_OWNER_EMAIL"]);
-	if (!from || !ownerEmail) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+	if (!from || !ownerEmail) return { sent: false, reason: "SMTP_NOT_CONFIGURED" as const };
 	if (isPlaceholderValue(from) || isPlaceholderValue(ownerEmail)) {
-		return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+		return { sent: false, reason: "SMTP_NOT_CONFIGURED" as const };
 	}
 
 	const normalizedSubject = payload.subject?.trim() || "Non précisé";
@@ -512,7 +569,7 @@ ${normalizedMessage}`;
 		}
 	);
 
-	const ownerSent = await sendMailSafe(transporter, {
+	const ownerResult = await sendMailSafe(transporter, {
 		from,
 		to: ownerEmail,
 		replyTo: payload.email,
@@ -521,7 +578,13 @@ ${normalizedMessage}`;
 		html: ownerHtml
 	});
 
-	return ownerSent ? { sent: true } : { sent: false, reason: "OWNER_MAIL_FAILED" };
+	return ownerResult.sent
+		? { sent: true }
+		: {
+				sent: false,
+				reason: ownerResult.reason ?? "OWNER_MAIL_FAILED",
+				details: ownerResult.details
+			};
 }
 
 export function isEmailServiceConfigured() {

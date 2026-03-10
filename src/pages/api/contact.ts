@@ -48,6 +48,10 @@ export const POST: APIRoute = async ({ request }) => {
 		});
 
 		if (!mailStatus.sent) {
+			console.error("CONTACT_MAIL_FAILED", {
+				reason: mailStatus.reason ?? "MAIL_NOT_SENT",
+				details: mailStatus.details ?? ""
+			});
 			return json(503, { error: mailStatus.reason ?? "MAIL_NOT_SENT" });
 		}
 

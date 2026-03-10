@@ -185,6 +185,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 					const message =
 						failureCode === "SMTP_NOT_CONFIGURED"
 							? "Le service e-mail n'est pas configuré côté serveur. Merci de réessayer plus tard."
+							: failureCode === "SMTP_AUTH_FAILED"
+								? "Envoi impossible: identifiants SMTP refusés."
+								: failureCode === "SMTP_CONNECTION_FAILED"
+									? "Envoi impossible: connexion au serveur e-mail échouée."
 							: "Envoi impossible pour le moment. Réessayez dans quelques instants.";
 					setStatus(message, "error");
 				} finally {

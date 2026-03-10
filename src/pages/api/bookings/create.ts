@@ -78,17 +78,22 @@ export const POST: APIRoute = async ({ request }) => {
 		email: bookingRow.email as string
 	};
 
-	let emailStatus: { sent: boolean; reason?: string } = { sent: true };
+	let emailStatus: { sent: boolean; reason?: string; details?: string } = { sent: true };
 	try {
 		emailStatus = await sendBookingConfirmationEmails(emailPayload);
 		if (!emailStatus.sent) {
 			console.error("BOOKING_CONFIRMATION_MAIL_FAILED", {
 				bookingId: bookingRow.id,
-				reason: emailStatus.reason ?? "UNKNOWN"
+				reason: emailStatus.reason ?? "UNKNOWN",
+				details: emailStatus.details ?? ""
 			});
 		}
 	} catch (error) {
-		emailStatus = { sent: false, reason: "MAIL_SEND_FAILED" };
+		emailStatus = {
+			sent: false,
+			reason: "MAIL_SEND_FAILED",
+			details: error instanceof Error ? error.message : "UNKNOWN"
+		};
 		console.error("BOOKING_CONFIRMATION_MAIL_ERROR", {
 			bookingId: bookingRow.id,
 			error: error instanceof Error ? error.message : "UNKNOWN"

@@ -179,6 +179,19 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				node.textContent = String(value);
 			};
 
+			const readApiPayload = async (response) => {
+				const cloned = response.clone();
+				try {
+					return {
+						payload: await response.json(),
+						rawText: ""
+					};
+				} catch {
+					const rawText = await cloned.text().catch(() => "");
+					return { payload: {}, rawText };
+				}
+			};
+
 			const DEFAULT_TIMES_BY_WEEKDAY = {
 				2: ["09:30", "13:00", "15:30"], // mardi
 				3: ["09:30", "13:00", "15:30"], // mercredi
@@ -618,7 +631,7 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				const response = await fetch(`/api/admin/availability/${slotId}`, {
 					method: "DELETE"
 				});
-				const result = await response.json().catch(() => ({}));
+				const { payload: result, rawText } = await readApiPayload(response);
 				if (!response.ok) {
 					if (result?.error === "UNAUTHORIZED") {
 						setStatus(availabilityStatus, "Session expirée. Reconnectez-vous.", "error");
@@ -637,8 +650,8 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 						);
 						return;
 					}
-					const code = String(result?.error ?? "UNKNOWN");
-					const details = String(result?.details ?? "").trim();
+					const code = String(result?.error ?? `HTTP_${response.status}`);
+					const details = String(result?.details ?? rawText ?? "").trim();
 					setStatus(
 						availabilityStatus,
 						`Impossible de supprimer ce créneau (${code}${details ? `: ${details}` : ""}).`,
@@ -663,7 +676,7 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				const response = await fetch(`/api/admin/bookings/${bookingId}/cancel`, {
 					method: "POST"
 				});
-				const result = await response.json().catch(() => ({}));
+				const { payload: result, rawText } = await readApiPayload(response);
 				if (!response.ok) {
 					if (result?.error === "UNAUTHORIZED") {
 						setStatus(bookingStatus, "Session expirée. Reconnectez-vous.", "error");
@@ -683,8 +696,8 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 						await Promise.all([loadBookings(), loadAvailability()]);
 						return;
 					}
-					const code = String(result?.error ?? "UNKNOWN");
-					const details = String(result?.details ?? "").trim();
+					const code = String(result?.error ?? `HTTP_${response.status}`);
+					const details = String(result?.details ?? rawText ?? "").trim();
 					setStatus(
 						bookingStatus,
 						`Échec de l'annulation (${code}${details ? `: ${details}` : ""}).`,
