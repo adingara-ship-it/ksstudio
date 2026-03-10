@@ -86,18 +86,30 @@ const websiteSchema = {
 			<noscript>
 				<link rel="stylesheet" href={googleFontsHref} />
 			</noscript>
-		{
-			isHome && (
-				<link
-					rel="preload"
-					as="image"
-					type="image/avif"
-					href="/optimized/hero-1200.avif"
-					imagesrcset="/optimized/hero-768.avif 768w, /optimized/hero-1200.avif 1200w, /optimized/hero-1400.avif 1400w"
-					imagesizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
-				/>
-			)
-		}
+			{
+				isHome && (
+					<>
+						<link
+							rel="preload"
+							as="image"
+							type="image/jpeg"
+							href="/optimized/hero-mobile-1280.jpg"
+							imagesrcset="/optimized/hero-mobile-960.jpg 960w, /optimized/hero-mobile-1280.jpg 1280w"
+							imagesizes="95vw"
+							media="(max-width: 760px)"
+						/>
+						<link
+							rel="preload"
+							as="image"
+							type="image/avif"
+							href="/optimized/hero-1200.avif"
+							imagesrcset="/optimized/hero-768.avif 768w, /optimized/hero-1200.avif 1200w, /optimized/hero-1400.avif 1400w"
+							imagesizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
+							media="(min-width: 761px)"
+						/>
+					</>
+				)
+			}
 			<title>{title}</title>
 		</head>
 		<body class={isHome ? "route-home" : undefined}>

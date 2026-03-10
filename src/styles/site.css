@@ -2233,6 +2233,10 @@ textarea {
 		min-height: 380px;
 	}
 
+	.hero-bg {
+		object-position: center 36%;
+	}
+
 	.hero-content {
 		padding: 4.8rem 0.9rem 1.5rem;
 	}
@@ -2602,6 +2606,10 @@ textarea {
 	.hero-panel,
 	.hero-content {
 		min-height: 350px;
+	}
+
+	.hero-bg {
+		object-position: center 38%;
 	}
 
 	.hero-content {

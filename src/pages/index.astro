@@ -88,6 +88,12 @@ const reviews = [
 		<section class="hero-panel">
 			<picture>
 				<source
+					media="(max-width: 760px)"
+					type="image/jpeg"
+					srcset="/optimized/hero-mobile-960.jpg 960w, /optimized/hero-mobile-1280.jpg 1280w"
+					sizes="95vw"
+				/>
+				<source
 					type="image/avif"
 					srcset="/optimized/hero-768.avif 768w, /optimized/hero-1200.avif 1200w, /optimized/hero-1400.avif 1400w"
 					sizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
