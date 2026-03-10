@@ -12,8 +12,20 @@ function getSessionDurationSeconds() {
 
 const SESSION_DURATION_SECONDS = getSessionDurationSeconds();
 
+function normalizeEnvValue(value: string) {
+	const trimmed = value.trim();
+	if (
+		(trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+		(trimmed.startsWith("'") && trimmed.endsWith("'"))
+	) {
+		return trimmed.slice(1, -1).trim();
+	}
+	return trimmed;
+}
+
 function getEnvValue(name: string) {
-	const value = import.meta.env[name];
+	const raw = import.meta.env[name];
+	const value = typeof raw === "string" ? normalizeEnvValue(raw) : "";
 	if (!value) {
 		throw new Error(`Missing required environment variable: ${name}`);
 	}
@@ -42,7 +54,7 @@ function safeEqual(a: string, b: string) {
 
 export function getAdminCredentials() {
 	return {
-		email: getEnvValue("ADMIN_EMAIL"),
+		email: getEnvValue("ADMIN_EMAIL").toLowerCase(),
 		password: getEnvValue("ADMIN_PASSWORD")
 	};
 }
@@ -73,17 +85,17 @@ export function isAdminAuthenticated(cookies: AstroCookies) {
 	const [payload, signature] = token.split(".");
 	if (!payload || !signature) return false;
 
-	const expectedSignature = signPayload(payload);
-	if (!safeEqual(expectedSignature, signature)) return false;
-
 	try {
+		const expectedSignature = signPayload(payload);
+		if (!safeEqual(expectedSignature, signature)) return false;
+
 		const parsed = JSON.parse(decodeBase64Url(payload)) as {
 			email?: string;
 			exp?: number;
 		};
 		if (!parsed.email || !parsed.exp) return false;
 		if (parsed.exp < Math.floor(Date.now() / 1000)) return false;
-		return parsed.email === getAdminCredentials().email;
+		return parsed.email.toLowerCase() === getAdminCredentials().email;
 	} catch {
 		return false;
 	}

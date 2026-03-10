@@ -40,30 +40,58 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 			const form = document.getElementById("admin-login-form");
 			const statusNode = document.getElementById("admin-login-status");
 			if (!(form instanceof HTMLFormElement) || !(statusNode instanceof HTMLElement)) return;
+			const submitButton = form.querySelector('button[type="submit"]');
+			if (!(submitButton instanceof HTMLButtonElement)) return;
 
 			form.addEventListener("submit", async (event) => {
 				event.preventDefault();
 				statusNode.textContent = "";
+				statusNode.dataset.state = "";
+				submitButton.disabled = true;
+				submitButton.textContent = "Connexion...";
 
 				const formData = new FormData(form);
 				const payload = {
-					email: String(formData.get("email") ?? ""),
+					email: String(formData.get("email") ?? "").trim(),
 					password: String(formData.get("password") ?? "")
 				};
 
-				const response = await fetch("/api/admin/login", {
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify(payload)
-				});
+				try {
+					const response = await fetch("/api/admin/login", {
+						method: "POST",
+						headers: { "content-type": "application/json" },
+						body: JSON.stringify(payload)
+					});
 
-				if (!response.ok) {
-					statusNode.textContent = "Identifiants invalides.";
+					if (!response.ok) {
+						const result = await response.json().catch(() => ({}));
+						const code = String(result?.error ?? "");
+						if (code === "TOO_MANY_ATTEMPTS") {
+							const retryAfter = Number(result?.retryAfterSeconds ?? 0);
+							statusNode.textContent = retryAfter > 0
+								? `Trop de tentatives. Réessayez dans ${retryAfter} secondes.`
+								: "Trop de tentatives. Réessayez dans quelques minutes.";
+						} else if (code === "AUTH_CONFIG_MISSING") {
+							statusNode.textContent = "Configuration admin incomplète sur le serveur.";
+						} else if (code === "ORIGIN_FORBIDDEN") {
+							statusNode.textContent = "Session invalide. Rechargez la page puis réessayez.";
+						} else if (code === "FIELDS_REQUIRED") {
+							statusNode.textContent = "Email et mot de passe requis.";
+						} else {
+							statusNode.textContent = "Identifiants invalides.";
+						}
+						statusNode.dataset.state = "error";
+						return;
+					}
+
+					window.location.href = "/admin";
+				} catch {
+					statusNode.textContent = "Connexion impossible pour le moment. Réessayez.";
 					statusNode.dataset.state = "error";
-					return;
+				} finally {
+					submitButton.disabled = false;
+					submitButton.textContent = "Se connecter";
 				}
-
-				window.location.href = "/admin";
 			});
 		})();
 	</script>

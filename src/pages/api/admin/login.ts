@@ -50,9 +50,18 @@ export const POST: APIRoute = async (context) => {
 		});
 	}
 
-	const admin = getAdminCredentials();
+	let admin: { email: string; password: string };
+	try {
+		admin = getAdminCredentials();
+	} catch (error) {
+		console.error("[admin-auth] login failed: missing auth config", {
+			ipAddress,
+			error: error instanceof Error ? error.message : "UNKNOWN"
+		});
+		return json(500, { error: "AUTH_CONFIG_MISSING" });
+	}
 
-	const isEmailValid = safeTextEqual(email, admin.email.toLowerCase());
+	const isEmailValid = safeTextEqual(email, admin.email);
 	const isPasswordValid = safeTextEqual(password, admin.password);
 
 	if (!isEmailValid || !isPasswordValid) {
@@ -75,7 +84,15 @@ export const POST: APIRoute = async (context) => {
 	}
 
 	clearAdminLoginFailures(ipAddress, email);
-	setAdminSession(cookies, admin.email);
+	try {
+		setAdminSession(cookies, admin.email);
+	} catch (error) {
+		console.error("[admin-auth] login failed: session config invalid", {
+			ipAddress,
+			error: error instanceof Error ? error.message : "UNKNOWN"
+		});
+		return json(500, { error: "AUTH_CONFIG_MISSING" });
+	}
 	console.info("[admin-auth] login success", {
 		ipAddress,
 		email: maskEmailAddress(email)
