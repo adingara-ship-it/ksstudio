@@ -179,8 +179,16 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				node.textContent = String(value);
 			};
 
-			const QUICK_TIMES = ["09:30", "13:00", "15:30", "17:30"];
-			const DEFAULT_WORK_DAYS = new Set([2, 3, 5, 6]);
+			const DEFAULT_TIMES_BY_WEEKDAY = {
+				2: ["09:30", "13:00", "15:30"], // mardi
+				3: ["09:30", "13:00", "15:30"], // mercredi
+				5: ["09:30", "13:00", "15:30", "17:30"], // vendredi
+				6: ["09:30", "13:00", "15:30", "17:30"] // samedi
+			};
+			const FALLBACK_QUICK_TIMES = ["09:30", "13:00", "15:30"];
+			const DEFAULT_WORK_DAYS = new Set(
+				Object.keys(DEFAULT_TIMES_BY_WEEKDAY).map((key) => Number(key))
+			);
 
 			let availabilitySlots = [];
 			let availabilityWeekStart = null;
@@ -242,6 +250,18 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 					month: "2-digit"
 				}).format(date);
 
+			const getQuickTimesForDate = (isoDate) => {
+				const [year, month, day] = String(isoDate ?? "")
+					.split("-")
+					.map((value) => Number(value));
+				if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+					return [...FALLBACK_QUICK_TIMES];
+				}
+				const weekday = new Date(year, month - 1, day).getDay();
+				const dayDefaults = DEFAULT_TIMES_BY_WEEKDAY[weekday] ?? FALLBACK_QUICK_TIMES;
+				return [...dayDefaults];
+			};
+
 			const buildQuickDateOptions = () => {
 				const today = new Date();
 				today.setHours(0, 0, 0, 0);
@@ -272,7 +292,12 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 			};
 
 			const renderQuickTimeButtons = () => {
-				quickTimeContainer.innerHTML = QUICK_TIMES
+				const quickTimes = getQuickTimesForDate(availabilityDateInput.value);
+				if (quickTimes.length > 0 && !quickTimes.includes(availabilityTimeInput.value)) {
+					availabilityTimeInput.value = quickTimes[0];
+				}
+
+				quickTimeContainer.innerHTML = quickTimes
 					.map(
 						(time) => `
 							<button
@@ -305,8 +330,9 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 
 			const applyQuickDefaults = () => {
 				refreshQuickDateOptionsIfNeeded(true);
-				if (!availabilityTimeInput.value) {
-					availabilityTimeInput.value = QUICK_TIMES[0];
+				const quickTimes = getQuickTimesForDate(availabilityDateInput.value);
+				if (!availabilityTimeInput.value || !quickTimes.includes(availabilityTimeInput.value)) {
+					availabilityTimeInput.value = quickTimes[0] ?? "";
 				}
 				renderQuickTimeButtons();
 			};
@@ -508,6 +534,7 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				if (!value) return;
 				availabilityDateInput.value = value;
 				renderQuickDateButtons();
+				renderQuickTimeButtons();
 			});
 
 			quickTimeContainer.addEventListener("click", (event) => {
@@ -523,6 +550,7 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 
 			availabilityDateInput.addEventListener("change", () => {
 				renderQuickDateButtons();
+				renderQuickTimeButtons();
 			});
 
 			availabilityTimeInput.addEventListener("change", () => {

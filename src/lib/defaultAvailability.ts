@@ -1,4 +1,9 @@
-import { createLocalIso, dateToLocalYmd } from "./bookingTime";
+import {
+	addDaysToYmd,
+	createLocalIso,
+	dateToLocalYmd,
+	weekdayFromYmd
+} from "./bookingTime";
 import { supabaseAdmin } from "./supabase";
 
 type SlotRow = {
@@ -22,19 +27,20 @@ function isMissingBlockedTableError(error: { code?: string; message?: string } |
 function buildDefaultRows() {
 	const rows: SlotRow[] = [];
 	const nowMs = Date.now();
-	const startDate = new Date();
-	startDate.setHours(0, 0, 0, 0);
+	const startDateYmd = dateToLocalYmd(new Date());
 
 	for (let offset = 0; offset < DEFAULT_HORIZON_DAYS; offset += 1) {
-		const currentDate = new Date(startDate);
-		currentDate.setDate(startDate.getDate() + offset);
-		const weekday = currentDate.getDay();
+		const currentDateYmd = addDaysToYmd(startDateYmd, offset);
+		if (!currentDateYmd) continue;
+
+		const weekday = weekdayFromYmd(currentDateYmd);
+		if (weekday === null) continue;
+
 		const times = DEFAULT_WEEKLY_TIMES[weekday] ?? [];
 		if (times.length === 0) continue;
 
-		const localDate = dateToLocalYmd(currentDate);
 		for (const time of times) {
-			const iso = createLocalIso(localDate, time);
+			const iso = createLocalIso(currentDateYmd, time);
 			if (!iso) continue;
 			if (new Date(iso).getTime() <= nowMs) continue;
 			rows.push({

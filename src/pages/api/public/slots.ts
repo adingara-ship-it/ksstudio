@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { ensureDefaultAvailability } from "../../../lib/defaultAvailability";
-import { getDayBoundaryIso } from "../../../lib/bookingTime";
+import { getDayBoundaryIso, isoToBookingYmd } from "../../../lib/bookingTime";
 import { json } from "../../../lib/api";
 import { supabaseAdmin } from "../../../lib/supabase";
 
@@ -47,9 +47,7 @@ export const GET: APIRoute = async ({ url }) => {
 		slotAt: row.slot_at
 	}));
 
-	const dates = Array.from(
-		new Set(slots.map((slot) => slot.slotAt.slice(0, 10)))
-	);
+	const dates = Array.from(new Set(slots.map((slot) => isoToBookingYmd(slot.slotAt)).filter(Boolean)));
 
 	return json(200, { slots, dates });
 };

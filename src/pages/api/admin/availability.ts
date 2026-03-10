@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 import {
 	createLocalIso,
-	dateToLocalYmd,
 	minutesToTimeLabel
 } from "../../../lib/bookingTime";
 import { ensureAdmin } from "../../../lib/adminGuard";
@@ -154,7 +153,7 @@ export const POST: APIRoute = async (context) => {
 
 	return json(200, {
 		success: true,
-		date: dateToLocalYmd(new Date(`${date}T12:00:00`)),
+		date,
 		generated: rows.length,
 		inserted,
 		ignoredDuplicates,
