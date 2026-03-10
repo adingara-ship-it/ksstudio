@@ -2168,7 +2168,13 @@ textarea {
 	}
 
 	.route-home .site-header {
-		top: 8px;
+		position: sticky;
+		top: 0;
+		padding-top: 0.34rem;
+	}
+
+	.route-home .site-header .nav-wrap {
+		margin-bottom: 0.38rem;
 	}
 
 	.nav-wrap {
@@ -2247,32 +2253,32 @@ textarea {
 	}
 
 	.hero-content {
-		padding: 4.8rem 0.9rem 1.5rem;
+		padding: 1.1rem 0.9rem 1.1rem;
 	}
 
 	.hero-center {
 		width: 100%;
 		padding-inline: 0.3rem;
-		gap: 0.72rem;
+		gap: 0.52rem;
 	}
 
 	.hero-center h1 {
-		font-size: clamp(1.92rem, 8.8vw, 2.58rem);
-		line-height: 0.89;
+		font-size: clamp(1.64rem, 7.7vw, 2.12rem);
+		line-height: 0.92;
 		max-width: none;
 		letter-spacing: -0.015em;
 	}
 
 	.hero-center p {
 		max-width: 31ch;
-		font-size: 0.9rem;
-		line-height: 1.28;
+		font-size: 0.78rem;
+		line-height: 1.24;
 	}
 
 	.hero-cta {
-		margin-top: 0.16rem;
-		padding: 0.74rem 1.28rem;
-		font-size: 0.9rem;
+		margin-top: 0.12rem;
+		padding: 0.62rem 1.02rem;
+		font-size: 0.82rem;
 	}
 
 	.services-strip {
@@ -2624,25 +2630,25 @@ textarea {
 	}
 
 	.hero-content {
-		padding: 4.4rem 0.78rem 1.3rem;
+		padding: 0.94rem 0.78rem 1rem;
 	}
 
 	.hero-center h1 {
-		font-size: clamp(1.72rem, 8.6vw, 2.26rem);
-		line-height: 0.9;
+		font-size: clamp(1.48rem, 7.8vw, 1.9rem);
+		line-height: 0.94;
 		max-width: none;
 	}
 
 	.hero-center p {
-		font-size: 0.86rem;
+		font-size: 0.75rem;
 		max-width: 30ch;
-		line-height: 1.26;
+		line-height: 1.22;
 	}
 
 	.hero-cta {
 		margin-top: 0.1rem;
-		padding: 0.66rem 1.04rem;
-		font-size: 0.88rem;
+		padding: 0.58rem 0.94rem;
+		font-size: 0.8rem;
 	}
 
 	.booking-steps {
@@ -2791,7 +2797,7 @@ textarea {
 
 @media (max-width: 380px) {
 	.hero-center h1 {
-		font-size: clamp(1.56rem, 8.4vw, 2rem);
+		font-size: clamp(1.34rem, 7.4vw, 1.72rem);
 	}
 
 	.hero-title-line,
