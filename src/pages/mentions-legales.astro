@@ -1,0 +1,89 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Mentions légales | KS Studio" description="Mentions légales, données personnelles et cookies du site KS Studio.">
+	<section class="section legal-page">
+		<div class="container legal-shell">
+			<p class="booking-head-kicker">Informations légales</p>
+			<h1 class="section-title">Mentions légales et cookies</h1>
+			<p class="section-intro">
+				Cette page résume les informations juridiques du site KS Studio, les données traitées
+				et la gestion des cookies.
+			</p>
+
+				<div class="legal-grid">
+					<article class="content-block legal-card">
+						<h2>Éditeur du site</h2>
+						<p>
+							Site: KS Studio - Institut d'onglerie.<br />
+							Responsable de publication: KS Studio.<br />
+							Contact: via la page <a href="/contact">/contact</a>.
+						</p>
+					</article>
+
+					<article class="content-block legal-card">
+						<h2>Hébergement et technique</h2>
+						<p>
+							Site hébergé sur Vercel Inc. (440 N Barranca Ave #4133, Covina, CA 91723, USA).<br />
+							Site développé avec Astro (Node) et base de données Supabase pour la gestion
+							des réservations et des statistiques techniques.<br />
+							Hébergeur: <a href="https://vercel.com" target="_blank" rel="noreferrer noopener">vercel.com</a>
+						</p>
+				</article>
+
+					<article class="content-block legal-card" id="formulaires">
+						<h2>Formulaires du site</h2>
+						<ul>
+							<li>Formulaire réservation: prénom, nom, téléphone, email, prestation et créneau.</li>
+							<li>Finalité: gestion du rendez-vous, confirmation et suivi client.</li>
+							<li>Base légale: mesures précontractuelles à votre demande (prise de rendez-vous).</li>
+							<li>Formulaire contact: prénom, nom, email, objet et message.</li>
+							<li>Finalité: répondre à votre demande envoyée depuis le site.</li>
+							<li>Base légale: intérêt légitime à répondre à votre prise de contact.</li>
+							<li>Un champ technique anti-spam (honeypot) est utilisé sur le formulaire contact.</li>
+							<li>Durées indicatives de conservation: demandes de contact (12 mois), réservations (24 mois).</li>
+						</ul>
+					</article>
+
+					<article class="content-block legal-card" id="cookies">
+						<h2>Cookies</h2>
+						<ul>
+							<li><code>ks_cookie_consent</code>: mémorise votre choix de consentement (180 jours).</li>
+							<li><code>ks_admin_session</code>: cookie de session administrateur (strictement nécessaire).</li>
+							<li>
+								Un identifiant de visite est stocké en local (<code>ks_visitor_session_id</code>)
+								uniquement si vous acceptez les cookies de mesure d’audience.
+							</li>
+							<li>Vous pouvez modifier votre choix à tout moment via le lien "Cookies" du footer.</li>
+						</ul>
+					</article>
+
+				<article class="content-block legal-card">
+					<h2>Base légale et conservation</h2>
+					<ul>
+						<li>Réservation: exécution de mesures précontractuelles (prise de rendez-vous).</li>
+						<li>Contact: votre demande explicite via le formulaire.</li>
+						<li>Audience: consentement cookies pour la mesure de fréquentation.</li>
+						<li>Les données sont conservées le temps nécessaire à la gestion de la demande.</li>
+					</ul>
+				</article>
+
+					<article class="content-block legal-card">
+						<h2>Destinataires et droits</h2>
+						<p>
+							Les données sont destinées à KS Studio et à ses prestataires techniques (hébergement,
+							base de données et envoi email) strictement pour faire fonctionner le service.<br /><br />
+							Vous pouvez demander l’accès, la rectification ou la suppression de vos données
+							via la page <a href="/contact">Contact</a>. Vous pouvez aussi modifier votre choix cookies
+							depuis le lien "Cookies" dans le footer.<br /><br />
+							En cas de litige, vous pouvez saisir l’autorité de protection des données compétente
+							(en Belgique: APD - Autorité de protection des données).
+						</p>
+					</article>
+			</div>
+
+			<p class="legal-note">Dernière mise à jour: 10 mars 2026.</p>
+		</div>
+	</section>
+</BaseLayout>

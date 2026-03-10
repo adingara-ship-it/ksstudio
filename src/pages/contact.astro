@@ -1,0 +1,192 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Contact | KS Studio">
+	<section class="section">
+		<div class="container">
+			<div class="contact-shell">
+				<div class="content-block contact-side">
+					<p class="booking-head-kicker">Réseaux sociaux</p>
+					<h1 class="section-title">Contactez KS Studio</h1>
+					<p class="section-intro">
+						Retrouvez le studio sur nos plateformes et envoyez votre message
+						directement depuis ce formulaire.
+					</p>
+					<div class="contact-grid">
+						<article class="contact-card">
+							<h3>Nos comptes</h3>
+							<p>Suivez nos réalisations et nouveautés.</p>
+							<ul class="contact-social-list">
+								<li>
+									<a
+										href="https://instagram.com/_ksstudiio"
+										target="_blank"
+										rel="noreferrer noopener"
+										class="contact-social-link"
+									>
+										<span class="contact-social-icon" aria-hidden="true">
+											<svg viewBox="0 0 24 24" role="img" focusable="false" class="icon-instagram">
+												<rect x="4" y="4" width="16" height="16" rx="4.5"></rect>
+												<circle cx="12" cy="12" r="4"></circle>
+												<circle cx="17.25" cy="6.75" r="1.05"></circle>
+											</svg>
+										</span>
+										<span class="contact-handle">@_ksstudiio</span>
+									</a>
+								</li>
+								<li>
+									<a
+										href="https://www.tiktok.com/@_ksstudiio"
+										target="_blank"
+										rel="noreferrer noopener"
+										class="contact-social-link"
+									>
+										<span class="contact-social-icon" aria-hidden="true">
+											<svg viewBox="0 0 24 24" role="img" focusable="false" class="icon-tiktok">
+												<path d="M14 3v2.3c0 1.5 1.2 2.7 2.7 2.7H19v3.1c-1.9 0-3.7-.6-5-1.8v6.2a5.3 5.3 0 1 1-5.3-5.3h.6v3.1h-.6a2.2 2.2 0 1 0 2.2 2.2V3H14z"></path>
+											</svg>
+										</span>
+										<span class="contact-handle">@_ksstudiio</span>
+									</a>
+								</li>
+							</ul>
+						</article>
+					</div>
+				</div>
+				<div class="content-block">
+					<h2 class="contact-form-title">Formulaire de contact</h2>
+					<p class="section-intro">
+						Indiquez vos informations et votre message. Nous vous répondrons
+						rapidement par email.
+					</p>
+					<form id="contact-form" class="booking-form">
+						<div class="contact-form-grid">
+							<div>
+								<label for="firstName">Prénom</label>
+								<input
+									id="firstName"
+									name="firstName"
+									type="text"
+									placeholder="Votre prénom"
+									autocomplete="given-name"
+									autocapitalize="words"
+									required
+								/>
+							</div>
+							<div>
+								<label for="lastName">Nom</label>
+								<input
+									id="lastName"
+									name="lastName"
+									type="text"
+									placeholder="Votre nom"
+									autocomplete="family-name"
+									autocapitalize="words"
+									required
+								/>
+							</div>
+						</div>
+						<div>
+							<label for="email">Email</label>
+							<input
+								id="email"
+								name="email"
+								type="email"
+								placeholder="vous@email.com"
+								autocomplete="email"
+								inputmode="email"
+								autocapitalize="off"
+								autocorrect="off"
+								spellcheck="false"
+								required
+							/>
+						</div>
+						<div>
+							<label for="subject">Objet (optionnel)</label>
+							<input
+								id="subject"
+								name="subject"
+								type="text"
+								placeholder="Ex: Question sur une prestation"
+								autocomplete="off"
+								autocapitalize="sentences"
+							/>
+						</div>
+						<div>
+							<label for="message">Message</label>
+							<textarea
+								id="message"
+								name="message"
+								placeholder="Expliquez votre demande..."
+								maxlength="1800"
+								required
+							></textarea>
+						</div>
+						<input type="text" name="website" tabindex="-1" autocomplete="off" class="sr-only-field" />
+						<button class="btn booking-submit" type="submit">Envoyer le message</button>
+						<p class="booking-status" id="contact-status" data-state=""></p>
+						<p class="form-legal-note">
+							En envoyant ce formulaire, vous acceptez le traitement de vos données pour être
+							recontacté(e). Détails: <a href="/mentions-legales#formulaires">mentions légales</a>.
+						</p>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<script>
+		(() => {
+			const form = document.getElementById("contact-form");
+			const statusNode = document.getElementById("contact-status");
+			if (!(form instanceof HTMLFormElement) || !(statusNode instanceof HTMLElement)) return;
+
+			const submitButton = form.querySelector(".booking-submit");
+			if (!(submitButton instanceof HTMLButtonElement)) return;
+
+			const setStatus = (message, state = "") => {
+				statusNode.textContent = message;
+				statusNode.dataset.state = state;
+			};
+
+			form.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				setStatus("");
+				submitButton.disabled = true;
+				submitButton.textContent = "Envoi en cours...";
+
+				const formData = new FormData(form);
+				const payload = {
+					firstName: String(formData.get("firstName") ?? "").trim(),
+					lastName: String(formData.get("lastName") ?? "").trim(),
+					email: String(formData.get("email") ?? "").trim(),
+					subject: String(formData.get("subject") ?? "").trim(),
+					message: String(formData.get("message") ?? "").trim(),
+					website: String(formData.get("website") ?? "").trim()
+				};
+
+				try {
+					const response = await fetch("/api/contact", {
+						method: "POST",
+						headers: { "content-type": "application/json" },
+						body: JSON.stringify(payload)
+					});
+
+					const result = await response.json().catch(() => ({}));
+					if (!response.ok || !result?.success) {
+						throw new Error(String(result?.error ?? "CONTACT_SEND_FAILED"));
+					}
+
+					form.reset();
+					setStatus("Message envoyé. Nous vous répondrons rapidement.", "success");
+				} catch {
+					setStatus("Envoi impossible pour le moment. Réessayez dans quelques instants.", "error");
+				} finally {
+					submitButton.disabled = false;
+					submitButton.textContent = "Envoyer le message";
+				}
+			});
+		})();
+	</script>
+</BaseLayout>

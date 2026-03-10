@@ -1,17 +1,528 @@
 ---
+import BaseLayout from "../layouts/BaseLayout.astro";
 
+const services = [
+	{
+		title: "Ongles Longs.",
+		text: "Extensions sculptées avec une ligne élégante et une finition couture."
+	},
+	{
+		title: "Court Simple.",
+		text: "Manucure nette et sophistiquée pour un rendu minimaliste haut de gamme."
+	},
+	{
+		title: "French.",
+		text: "French classique ou revisitée, précise, fine et toujours équilibrée."
+	},
+	{
+		title: "Nail Art.",
+		text: "Créations personnalisées du détail subtil à la composition signature."
+	},
+	{
+		title: "Pédicure.",
+		text: "Soin expert et finition impeccable pour une allure soignée jusqu’au bout."
+	}
+];
+
+const prices = [
+	{ label: "Pose complète (French / Babyboomer)", value: "45 EUR" },
+	{ label: "Gel + VSP / Gel simple", value: "40 EUR" },
+	{ label: "BIAB", value: "35 EUR" },
+	{ label: "Dépose + manucure", value: "15 EUR" }
+];
+
+const reviews = [
+	{
+		text: "Je suis arrivée avec une casse sur deux ongles, tout a été réparé proprement et sans douleur.",
+		name: "Mariam T."
+	},
+	{
+		text: "Babyboomer fait il y a presque 3 semaines et ça tient encore super bien, je suis bluffée.",
+		name: "Sarah B."
+	},
+	{
+		text: "Je suis venue avec une inspi Pinterest et le rendu est plus fin que la photo de départ.",
+		name: "Camille R."
+	},
+	{
+		text: "Très bon accueil, on prend le temps de choisir la forme et la longueur qui vont vraiment à mes mains.",
+		name: "Nora M."
+	},
+	{
+		text: "Je travaille beaucoup avec mes mains et la tenue est nickel au quotidien, même après une semaine chargée.",
+		name: "Léa T."
+	},
+	{
+		text: "French ultra propre, pas épaisse, exactement ce que je voulais pour un événement.",
+		name: "Ines D."
+	},
+	{
+		text: "Premier rendez-vous BIAB pour moi: ongles plus solides et rendu naturel, sans effet trop chargé.",
+		name: "Julie P."
+	},
+	{
+		text: "J'ai pris un nail art discret et élégant, ça attire l'œil sans en faire trop.",
+		name: "Maya S."
+	},
+	{
+		text: "Ponctuelle, douce et très minutieuse sur les détails. On sent l'expérience et le sérieux.",
+		name: "Émilie K."
+	},
+	{
+		text: "Le timing est respecté du début à la fin, c'est parfait quand on a une journée bien remplie.",
+		name: "Sonia F."
+	},
+	{
+		text: "Très bons conseils sur la longueur selon la forme de mes mains, le résultat est beaucoup plus harmonieux.",
+		name: "Chloé V."
+	},
+	{
+		text: "Je reviens tous les mois et je ne suis jamais déçue, c'est devenu mon rendez-vous habituel.",
+		name: "Yasmine C."
+	}
+];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="KS Studio | Onglerie haut de gamme">
+	<div class="home-shell">
+		<section class="hero-panel">
+			<picture>
+				<source
+					type="image/avif"
+					srcset="/optimized/hero-768.avif 768w, /optimized/hero-1200.avif 1200w, /optimized/hero-1400.avif 1400w"
+					sizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
+				/>
+				<source
+					type="image/jpeg"
+					srcset="/optimized/hero-768.jpg 768w, /optimized/hero-1200.jpg 1200w, /optimized/hero-1400.jpg 1400w"
+					sizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
+				/>
+				<img
+					src="/optimized/hero-1200.jpg"
+					srcset="/optimized/hero-768.jpg 768w, /optimized/hero-1200.jpg 1200w, /optimized/hero-1400.jpg 1400w"
+					sizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
+					alt="Image d'accueil onglerie"
+					class="hero-bg"
+					loading="eager"
+					fetchpriority="high"
+					decoding="async"
+					width="1400"
+					height="934"
+				/>
+			</picture>
+			<div class="hero-shade"></div>
+				<div class="hero-content">
+					<div class="hero-center">
+						<h1>
+							<span class="hero-title-line">L'élégance des</span>
+							<span class="hero-title-line">Ongles signé</span>
+							<span class="hero-title-accent">KS Studio</span>
+						</h1>
+						<p>
+							Des finitions précises, une tenue durable et un rendu haut de gamme dès le premier rendez-vous.
+						</p>
+						<a class="hero-cta" href="/reservation">Prendre rendez-vous maintenant</a>
+					</div>
+				</div>
+			</section>
+
+		<section class="services-strip" id="prestations">
+			{
+				services.map((service) => (
+					<article
+						class={`service-tile ${service.title === "Pédicure." ? "service-tile-mobile-hidden" : ""}`}
+					>
+						<h2>{service.title}</h2>
+						<p>{service.text}</p>
+						<span aria-hidden="true">-&gt;</span>
+					</article>
+				))
+			}
+		</section>
+
+		<section class="wide-feature">
+			<picture>
+				<source
+					type="image/avif"
+					srcset="/optimized/studio-768.avif 768w, /optimized/studio-1200.avif 1200w, /optimized/studio-1400.avif 1400w"
+					sizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
+				/>
+				<source
+					type="image/jpeg"
+					srcset="/optimized/studio-768.jpg 768w, /optimized/studio-1200.jpg 1200w, /optimized/studio-1400.jpg 1400w"
+					sizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
+				/>
+				<img
+					src="/optimized/studio-1200.jpg"
+					srcset="/optimized/studio-768.jpg 768w, /optimized/studio-1200.jpg 1200w, /optimized/studio-1400.jpg 1400w"
+					sizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
+					alt="Ambiance du salon"
+					class="media-smooth"
+					loading="lazy"
+					decoding="async"
+					width="1400"
+					height="934"
+				/>
+			</picture>
+			<div class="wide-feature-copy">
+				<h2>Un studio raffiné, pensé pour votre moment.</h2>
+				<p>
+					Chaque rendez-vous combine confort, hygiène irréprochable et précision
+					technique pour un résultat qui se remarque.
+				</p>
+			</div>
+		</section>
+
+		<section class="gallery-strip" id="realisations">
+			<div class="gallery-head">
+				<p class="gallery-kicker">Collection signature</p>
+				<h2>Des poses sculptées dans le détail.</h2>
+				<p>
+					Forme, brillance, équilibre: chaque réalisation est pensée pour mettre vos mains en valeur.
+				</p>
+			</div>
+			<div class="gallery-rail-wrap">
+				<p class="gallery-scroll-hint">Glissez pour voir toutes les réalisations.</p>
+				<div class="gallery-rail" aria-label="Galerie des réalisations onglerie">
+					<figure class="gallery-card gallery-card-feature">
+						<picture>
+							<source
+								type="image/avif"
+								srcset="/optimized/ongles6-360.avif 360w, /optimized/ongles6-560.avif 560w, /optimized/ongles6-860.avif 860w"
+								sizes="(max-width: 520px) 76vw, (max-width: 760px) 70vw, (max-width: 1120px) 40vw, 30vw"
+							/>
+							<source
+								type="image/jpeg"
+								srcset="/optimized/ongles6-360.jpg 360w, /optimized/ongles6-560.jpg 560w, /optimized/ongles6-860.jpg 860w"
+								sizes="(max-width: 520px) 76vw, (max-width: 760px) 70vw, (max-width: 1120px) 40vw, 30vw"
+							/>
+							<img
+								src="/optimized/ongles6-560.jpg"
+								srcset="/optimized/ongles6-360.jpg 360w, /optimized/ongles6-560.jpg 560w, /optimized/ongles6-860.jpg 860w"
+								sizes="(max-width: 520px) 76vw, (max-width: 760px) 70vw, (max-width: 1120px) 40vw, 30vw"
+								alt="Pose longue nude et strass"
+								class="work-photo work-photo-6 media-smooth"
+								loading="lazy"
+								decoding="async"
+								width="1152"
+								height="2048"
+							/>
+						</picture>
+					<figcaption>Signature strass</figcaption>
+					</figure>
+					<figure class="gallery-card">
+						<picture>
+							<source
+								type="image/avif"
+								srcset="/optimized/ongles1-360.avif 360w, /optimized/ongles1-560.avif 560w, /optimized/ongles1-860.avif 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+							/>
+							<source
+								type="image/jpeg"
+								srcset="/optimized/ongles1-360.jpg 360w, /optimized/ongles1-560.jpg 560w, /optimized/ongles1-860.jpg 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+							/>
+							<img
+								src="/optimized/ongles1-560.jpg"
+								srcset="/optimized/ongles1-360.jpg 360w, /optimized/ongles1-560.jpg 560w, /optimized/ongles1-860.jpg 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+								alt="Pose amande rose avec french blanche"
+								class="work-photo work-photo-1 media-smooth"
+								loading="lazy"
+								decoding="async"
+								width="900"
+								height="1600"
+							/>
+						</picture>
+					<figcaption>French soft</figcaption>
+					</figure>
+					<figure class="gallery-card">
+						<picture>
+							<source
+								type="image/avif"
+								srcset="/optimized/work2-360.avif 360w, /optimized/work2-560.avif 560w, /optimized/work2-860.avif 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+							/>
+							<source
+								type="image/jpeg"
+								srcset="/optimized/work2-360.jpg 360w, /optimized/work2-560.jpg 560w, /optimized/work2-860.jpg 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+							/>
+							<img
+								src="/optimized/work2-560.jpg"
+								srcset="/optimized/work2-360.jpg 360w, /optimized/work2-560.jpg 560w, /optimized/work2-860.jpg 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+								alt="Nail art avec détails rouges et motifs"
+								class="work-photo work-photo-2 media-smooth"
+								loading="lazy"
+								decoding="async"
+								width="900"
+								height="1600"
+							/>
+						</picture>
+					<figcaption>Nail art accent</figcaption>
+					</figure>
+					<figure class="gallery-card">
+						<picture>
+							<source
+								type="image/avif"
+								srcset="/optimized/ongles5-360.avif 360w, /optimized/ongles5-560.avif 560w, /optimized/ongles5-860.avif 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+							/>
+							<source
+								type="image/jpeg"
+								srcset="/optimized/ongles5-360.jpg 360w, /optimized/ongles5-560.jpg 560w, /optimized/ongles5-860.jpg 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+							/>
+							<img
+								src="/optimized/ongles5-560.jpg"
+								srcset="/optimized/ongles5-360.jpg 360w, /optimized/ongles5-560.jpg 560w, /optimized/ongles5-860.jpg 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+								alt="French rose sur ongles carrés"
+								class="work-photo work-photo-5 media-smooth"
+								loading="lazy"
+								decoding="async"
+								width="1152"
+								height="2048"
+							/>
+						</picture>
+					<figcaption>Pink square</figcaption>
+					</figure>
+					<figure class="gallery-card">
+						<picture>
+							<source
+								type="image/avif"
+								srcset="/optimized/ongles2-360.avif 360w, /optimized/ongles2-560.avif 560w, /optimized/ongles2-860.avif 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+							/>
+							<source
+								type="image/jpeg"
+								srcset="/optimized/ongles2-360.jpg 360w, /optimized/ongles2-560.jpg 560w, /optimized/ongles2-860.jpg 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+							/>
+							<img
+								src="/optimized/ongles2-560.jpg"
+								srcset="/optimized/ongles2-360.jpg 360w, /optimized/ongles2-560.jpg 560w, /optimized/ongles2-860.jpg 860w"
+								sizes="(max-width: 520px) 64vw, (max-width: 760px) 58vw, (max-width: 1120px) 34vw, 22vw"
+								alt="Pose amande avec french noire"
+								class="work-photo work-photo-3 media-smooth"
+								loading="lazy"
+								decoding="async"
+								width="900"
+								height="1600"
+							/>
+						</picture>
+					<figcaption>French noire</figcaption>
+					</figure>
+					<figure class="gallery-card gallery-card-feature">
+						<picture>
+							<source
+								type="image/avif"
+								srcset="/optimized/ongles4-360.avif 360w, /optimized/ongles4-560.avif 560w, /optimized/ongles4-860.avif 860w"
+								sizes="(max-width: 520px) 76vw, (max-width: 760px) 70vw, (max-width: 1120px) 40vw, 30vw"
+							/>
+							<source
+								type="image/jpeg"
+								srcset="/optimized/ongles4-360.jpg 360w, /optimized/ongles4-560.jpg 560w, /optimized/ongles4-860.jpg 860w"
+								sizes="(max-width: 520px) 76vw, (max-width: 760px) 70vw, (max-width: 1120px) 40vw, 30vw"
+							/>
+							<img
+								src="/optimized/ongles4-560.jpg"
+								srcset="/optimized/ongles4-360.jpg 360w, /optimized/ongles4-560.jpg 560w, /optimized/ongles4-860.jpg 860w"
+								sizes="(max-width: 520px) 76vw, (max-width: 760px) 70vw, (max-width: 1120px) 40vw, 30vw"
+								alt="Pose blanche avec bijoux nail art"
+								class="work-photo work-photo-4 media-smooth"
+								loading="lazy"
+								decoding="async"
+								width="900"
+								height="1600"
+							/>
+						</picture>
+					<figcaption>Bijoux détails</figcaption>
+					</figure>
+				</div>
+			</div>
+		</section>
+
+		<section class="price-panel" id="prix">
+			<h2>Prestations principales</h2>
+			<div class="price-grid">
+				{
+					prices.map((item) => (
+						<article class="price-tile">
+							<p>{item.label}</p>
+							<strong>{item.value}</strong>
+						</article>
+					))
+				}
+			</div>
+			<p class="section-intro">Suppléments (tailles et nail art) disponibles lors de la réservation.</p>
+		</section>
+
+		<section class="review-panel" id="avis">
+			<h2>Un service haut de gamme, validé par nos clientes.</h2>
+			<div
+				class="review-carousel"
+				data-review-carousel
+				data-reviews={JSON.stringify(reviews)}
+			>
+				<article class="review-card review-slot review-slot-left" data-slot="left" aria-hidden="true">
+					<p class="review-text">"{reviews[reviews.length - 1].text}"</p>
+					<span class="review-author">{reviews[reviews.length - 1].name}</span>
+				</article>
+				<article class="review-card review-slot review-slot-center" data-slot="center">
+					<p class="review-text">"{reviews[0].text}"</p>
+					<span class="review-author">{reviews[0].name}</span>
+				</article>
+				<article class="review-card review-slot review-slot-right" data-slot="right" aria-hidden="true">
+					<p class="review-text">"{reviews[1].text}"</p>
+					<span class="review-author">{reviews[1].name}</span>
+				</article>
+			</div>
+		</section>
+
+		<section class="bottom-cta">
+			<h2>Prête à réserver votre prochaine pose signature ?</h2>
+			<p>
+				Choisissez votre prestation et votre créneau en moins d'une minute.
+			</p>
+				<a class="btn" href="/reservation">Réserver maintenant</a>
+			</section>
+		</div>
+
+	<script>
+		(() => {
+			const carousel = document.querySelector("[data-review-carousel]");
+			if (!(carousel instanceof HTMLElement)) return;
+
+			let reviews = [];
+			try {
+				reviews = JSON.parse(carousel.dataset.reviews ?? "[]");
+			} catch {
+				reviews = [];
+			}
+			if (!Array.isArray(reviews) || reviews.length < 3) return;
+
+			const leftCard = carousel.querySelector('[data-slot="left"]');
+			const centerCard = carousel.querySelector('[data-slot="center"]');
+			const rightCard = carousel.querySelector('[data-slot="right"]');
+			if (!(leftCard instanceof HTMLElement)) return;
+			if (!(centerCard instanceof HTMLElement)) return;
+			if (!(rightCard instanceof HTMLElement)) return;
+
+			let centerIndex = 0;
+			const holdDuration = 4800;
+			const switchDuration = 460;
+			const swapMoment = 230;
+			let holdTimerId = null;
+			let swapTimerId = null;
+			let endTimerId = null;
+			let isSwitching = false;
+			let isInViewport = false;
+			let isPageVisible = !document.hidden;
+
+			const getReviewIndex = (offset) =>
+				(centerIndex + offset + reviews.length) % reviews.length;
+
+			const setCardContent = (card, review) => {
+				const textNode = card.querySelector(".review-text");
+				const authorNode = card.querySelector(".review-author");
+
+				if (textNode) textNode.textContent = `"${review.text}"`;
+				if (authorNode) authorNode.textContent = review.name;
+			};
+
+			const render = () => {
+				setCardContent(leftCard, reviews[getReviewIndex(-1)]);
+				setCardContent(centerCard, reviews[getReviewIndex(0)]);
+				setCardContent(rightCard, reviews[getReviewIndex(1)]);
+			};
+
+			const canRun = () => isInViewport && isPageVisible;
+
+			const queueNext = () => {
+				if (!canRun()) return;
+				holdTimerId = window.setTimeout(() => {
+					if (!canRun()) return;
+					if (isSwitching) return;
+					isSwitching = true;
+					carousel.classList.add("is-switching");
+
+					swapTimerId = window.setTimeout(() => {
+						if (!canRun()) return;
+						centerIndex = (centerIndex + 1) % reviews.length;
+						render();
+					}, swapMoment);
+
+					endTimerId = window.setTimeout(() => {
+						carousel.classList.remove("is-switching");
+						isSwitching = false;
+						if (!canRun()) return;
+						queueNext();
+					}, switchDuration);
+				}, holdDuration);
+			};
+
+			const stop = () => {
+				if (holdTimerId !== null) {
+					window.clearTimeout(holdTimerId);
+					holdTimerId = null;
+				}
+				if (swapTimerId !== null) {
+					window.clearTimeout(swapTimerId);
+					swapTimerId = null;
+				}
+				if (endTimerId !== null) {
+					window.clearTimeout(endTimerId);
+					endTimerId = null;
+				}
+				isSwitching = false;
+				carousel.classList.remove("is-switching");
+			};
+
+			const resume = () => {
+				if (!canRun()) return;
+				if (holdTimerId !== null || isSwitching) return;
+				queueNext();
+			};
+
+			render();
+
+			if ("IntersectionObserver" in window) {
+				const observer = new IntersectionObserver(
+					(entries) => {
+						entries.forEach((entry) => {
+							isInViewport = entry.isIntersecting;
+							if (!canRun()) {
+								stop();
+								return;
+							}
+							resume();
+						});
+					},
+					{
+						threshold: 0.2
+					}
+				);
+				observer.observe(carousel);
+			} else {
+				isInViewport = true;
+			}
+
+			document.addEventListener("visibilitychange", () => {
+				isPageVisible = !document.hidden;
+				if (!canRun()) {
+					stop();
+					return;
+				}
+				resume();
+			});
+
+			window.addEventListener("pagehide", () => {
+				stop();
+			});
+
+			resume();
+		})();
+	</script>
+</BaseLayout>

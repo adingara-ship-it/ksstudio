@@ -1,43 +1,67 @@
-# Astro Starter Kit: Minimal
+# KS Studio - Site + Reservation
 
-```sh
-npm create astro@latest -- --template minimal
+## Prerequis
+- Node.js 20+
+- Projet Supabase deja cree
+- Un SMTP pour les emails (Gmail SMTP, Mailgun SMTP, etc.)
+
+## Installation
+```bash
+npm install
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Configuration env
+1. Copier `.env.example` vers `.env`
+2. Renseigner:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_SESSION_SECRET`
+- `ADMIN_SESSION_DURATION_SECONDS` (optionnel, defaut 28800 / 8h)
+- `ADMIN_LOGIN_MAX_ATTEMPTS` (optionnel, defaut 5)
+- `ADMIN_LOGIN_WINDOW_MS` (optionnel, defaut 900000 / 15 min)
+- `ADMIN_LOGIN_BLOCK_MS` (optionnel, defaut 900000 / 15 min)
+- `ANALYTICS_ACTIVE_WINDOW_MINUTES` (optionnel, defaut 5)
+- `BOOKING_OWNER_EMAIL`
+- `SMTP_*`
+- `SITE_URL` (optionnel, ex: `https://ton-domaine.com`, utile pour les liens/images email)
+- `MAIL_LOGO_URL` (optionnel, ex: `https://ton-domaine.com/logoks.png`, prioritaire sur `SITE_URL`)
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+Verification rapide de la connexion:
+```bash
+npm run db:check
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Base de donnees Supabase
+Executer le SQL:
+- `supabase/schema.sql`
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Depuis l'editeur SQL Supabase, coller puis executer le contenu.
+Puis relancer `npm run db:check` pour confirmer que les tables sont bien detectees.
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Lancer le projet
+```bash
+npm run dev
+```
 
-## 🧞 Commands
+## Routes principales
+- `/` : page vitrine
+- `/reservation` : formulaire de reservation client
+- `/admin/login` : connexion admin
+- `/admin` : gestion disponibilites + rendez-vous
+- `/admin/analytics` : affluence en temps reel
 
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## APIs
+- `GET /api/public/slots`
+- `GET /api/public/slots?date=YYYY-MM-DD`
+- `POST /api/bookings/create`
+- `POST /api/admin/login`
+- `POST /api/admin/logout`
+- `GET /api/admin/availability`
+- `POST /api/admin/availability`
+- `DELETE /api/admin/availability/:id`
+- `GET /api/admin/bookings`
+- `POST /api/admin/bookings/:id/cancel`
+- `POST /api/analytics/track`
+- `GET /api/admin/analytics/realtime`

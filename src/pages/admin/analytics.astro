@@ -1,0 +1,109 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { isAdminAuthenticated } from "../../lib/adminAuth";
+
+if (!isAdminAuthenticated(Astro.cookies)) {
+	return Astro.redirect("/admin/login");
+}
+---
+
+<BaseLayout
+	title="Affluence | Admin KS Studio"
+	description="Suivi trafic temps réel"
+	showHeader={false}
+	showFooter={false}
+	showAnalytics={false}
+>
+	<section class="section admin-page">
+		<div class="container admin-shell">
+			<div class="admin-header-row admin-header-card">
+				<div>
+					<p class="admin-eyebrow">Analyse interne</p>
+					<h1 class="section-title">Affluence en temps réel</h1>
+					<p class="section-intro">Nombre de personnes actuellement sur le site.</p>
+				</div>
+				<div class="admin-header-actions">
+					<a href="/admin" class="btn btn-ghost">Tableau de bord</a>
+					<button id="admin-logout-btn" class="btn btn-ghost">Se déconnecter</button>
+				</div>
+			</div>
+
+			<div class="admin-kpi-grid admin-kpi-grid-compact">
+				<article class="admin-kpi-card">
+					<p class="admin-kpi-label">Personnes en ligne</p>
+					<p class="admin-kpi-value" id="analytics-active-visitors">0</p>
+				</article>
+			</div>
+
+			<section class="content-block admin-panel">
+				<h2 class="admin-section-title">Statut</h2>
+				<p id="analytics-status" class="booking-status" aria-live="polite"></p>
+			</section>
+		</div>
+	</section>
+
+	<script>
+		(() => {
+			const activeVisitorsNode = document.getElementById("analytics-active-visitors");
+			const statusNode = document.getElementById("analytics-status");
+			const logoutButton = document.getElementById("admin-logout-btn");
+
+			if (!(activeVisitorsNode instanceof HTMLElement)) return;
+			if (!(statusNode instanceof HTMLElement)) return;
+			if (!(logoutButton instanceof HTMLButtonElement)) return;
+
+			const formatDate = (isoDate) =>
+				new Intl.DateTimeFormat("fr-FR", {
+					day: "2-digit",
+					month: "2-digit",
+					hour: "2-digit",
+					minute: "2-digit",
+					second: "2-digit"
+				}).format(new Date(isoDate));
+
+			const setStatus = (message, state = "neutral") => {
+				statusNode.textContent = message;
+				statusNode.dataset.state = state;
+			};
+
+			const loadAnalytics = async () => {
+				const response = await fetch("/api/admin/analytics/realtime");
+				const payload = await response.json().catch(() => ({}));
+				if (!response.ok) {
+					const details = payload?.error === "ANALYTICS_TABLES_MISSING"
+						? "Tables analytics non configurées."
+						: "Impossible de charger l'affluence.";
+					setStatus(details, "error");
+					return;
+				}
+
+				activeVisitorsNode.textContent = String(payload.activeVisitors ?? 0);
+				setStatus(`Mise à jour: ${formatDate(new Date().toISOString())}`, "success");
+			};
+
+			logoutButton.addEventListener("click", async () => {
+				await fetch("/api/admin/logout", { method: "POST" });
+				window.location.href = "/admin/login";
+			});
+
+			loadAnalytics().catch(() => {
+				setStatus("Erreur de chargement de l'affluence.", "error");
+			});
+
+			window.setInterval(() => {
+				if (document.hidden) return;
+				loadAnalytics().catch(() => {
+					setStatus("Erreur de mise à jour de l'affluence.", "error");
+				});
+			}, 15_000);
+
+			document.addEventListener("visibilitychange", () => {
+				if (!document.hidden) {
+					loadAnalytics().catch(() => {
+						setStatus("Erreur de chargement de l'affluence.", "error");
+					});
+				}
+			});
+		})();
+	</script>
+</BaseLayout>

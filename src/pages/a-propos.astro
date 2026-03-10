@@ -1,0 +1,74 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="À propos | KS Studio">
+	<section class="section">
+		<div class="container split">
+			<div class="content-block">
+				<p class="eyebrow">À propos du studio</p>
+				<h1 class="section-title">Une approche précise, douce et haut de gamme.</h1>
+				<p>
+					KS Studio accompagne chaque cliente avec une méthode personnalisée,
+					fondée sur l’hygiène, la précision technique et le sens du détail.
+					L’objectif est d’obtenir un rendu élégant, durable et respectueux de
+					l’ongle naturel.
+				</p>
+				<p>
+					Le studio met l’accent sur la qualité du travail, la transparence des
+					prix et une expérience cliente fluide, du premier contact au suivi.
+				</p>
+				<a class="btn" href="/contact">Nous contacter</a>
+			</div>
+			<div>
+				<picture>
+					<source
+						type="image/avif"
+						srcset="/optimized/ton-420.avif 420w, /optimized/ton-720.avif 720w, /optimized/ton-1024.avif 1024w"
+						sizes="(max-width: 1120px) 92vw, 46vw"
+					/>
+					<source
+						type="image/jpeg"
+						srcset="/optimized/ton-420.jpg 420w, /optimized/ton-720.jpg 720w, /optimized/ton-1024.jpg 1024w"
+						sizes="(max-width: 1120px) 92vw, 46vw"
+					/>
+					<img
+						src="/optimized/ton-720.jpg"
+						srcset="/optimized/ton-420.jpg 420w, /optimized/ton-720.jpg 720w, /optimized/ton-1024.jpg 1024w"
+						sizes="(max-width: 1120px) 92vw, 46vw"
+						alt="Photo de présentation du studio"
+						loading="lazy"
+						decoding="async"
+						class="media-smooth"
+						width="1024"
+						height="1536"
+					/>
+				</picture>
+			</div>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="container">
+			<h2 class="section-title">Nos engagements</h2>
+			<div class="card-grid">
+				<article class="card">
+					<h3>Qualité</h3>
+					<p>Des produits professionnels et des gestes précis pour une tenue fiable.</p>
+				</article>
+				<article class="card">
+					<h3>Hygiène</h3>
+					<p>Des protocoles stricts pour une expérience sereine et sécurisée.</p>
+				</article>
+				<article class="card">
+					<h3>Style sur mesure</h3>
+					<p>Un résultat adapté à vos envies et à votre rythme de vie.</p>
+				</article>
+				<article class="card">
+					<h3>Conseil</h3>
+					<p>Des recommandations claires pour prolonger la beauté de la pose.</p>
+				</article>
+			</div>
+		</div>
+	</section>
+</BaseLayout>

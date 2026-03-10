@@ -1,0 +1,586 @@
+---
+import "../styles/site.css";
+
+interface Props {
+	title: string;
+	description?: string;
+	image?: string;
+	showHeader?: boolean;
+	showFooter?: boolean;
+	showAnalytics?: boolean;
+	noindex?: boolean;
+}
+
+const {
+	title,
+	description = "KS Studio - Institut d'onglerie haut de gamme.",
+	image = "/optimized/hero-1200.jpg",
+	showHeader = true,
+	showFooter = true,
+	showAnalytics = true,
+	noindex = false
+} = Astro.props;
+const path = Astro.url.pathname;
+const isHome = path === "/";
+const isAdminPath = path.startsWith("/admin");
+const analyticsEnabled = showAnalytics && !isAdminPath;
+const currentYear = new Date().getFullYear();
+const robotsContent = noindex || isAdminPath ? "noindex, nofollow" : "index, follow, max-image-preview:large";
+const canonicalUrl = new URL(path, Astro.url.origin).toString();
+const ogImageUrl = new URL(image, Astro.url.origin).toString();
+const googleFontsHref =
+	"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;600;700&display=swap";
+const websiteSchema = {
+	"@context": "https://schema.org",
+	"@type": "BeautySalon",
+	name: "KS Studio",
+	url: Astro.url.origin,
+	logo: new URL("/logoks.png", Astro.url.origin).toString(),
+	image: ogImageUrl,
+	sameAs: [
+		"https://instagram.com/_ksstudiio",
+		"https://www.tiktok.com/@_ksstudiio"
+	],
+	address: {
+		"@type": "PostalAddress",
+		addressCountry: "BE"
+	}
+};
+---
+
+<!doctype html>
+<html lang="fr">
+		<head>
+			<meta charset="UTF-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+			<meta name="description" content={description} />
+			<meta name="robots" content={robotsContent} />
+			<meta name="theme-color" content="#2a221d" />
+			<meta name="generator" content={Astro.generator} />
+		<link rel="canonical" href={canonicalUrl} />
+		<meta property="og:site_name" content="KS Studio" />
+		<meta property="og:type" content="website" />
+		<meta property="og:locale" content="fr_FR" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:image" content={ogImageUrl} />
+		<meta property="og:image:alt" content="KS Studio - Institut d'onglerie" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImageUrl} />
+		<link rel="icon" type="image/png" href="/logoks-nav.png" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/logoks-nav.png" />
+		<link rel="apple-touch-icon" href="/logoks-nav.png" />
+		<script is:inline>
+			document.documentElement.classList.add("js");
+		</script>
+		<script type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
+			<link rel="preconnect" href="https://fonts.googleapis.com" />
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+			<link rel="dns-prefetch" href="//fonts.googleapis.com" />
+			<link rel="dns-prefetch" href="//fonts.gstatic.com" />
+			<link rel="preload" as="style" href={googleFontsHref} />
+			<link rel="stylesheet" href={googleFontsHref} media="print" onload="this.media='all'" />
+			<noscript>
+				<link rel="stylesheet" href={googleFontsHref} />
+			</noscript>
+		{
+			isHome && (
+				<link
+					rel="preload"
+					as="image"
+					type="image/avif"
+					href="/optimized/hero-1200.avif"
+					imagesrcset="/optimized/hero-768.avif 768w, /optimized/hero-1200.avif 1200w, /optimized/hero-1400.avif 1400w"
+					imagesizes="(max-width: 760px) 95vw, (max-width: 1320px) 98vw, 1320px"
+				/>
+			)
+		}
+			<title>{title}</title>
+		</head>
+		<body class={isHome ? "route-home" : undefined}>
+			{
+				showHeader && (
+						<header class="site-header">
+							<div class="container nav-wrap">
+								<a href="/" class="hero-brand">
+									<img src="/logoks-nav.png" alt="Logo KS Studio" class="hero-brand-logo" width="128" height="128" decoding="async" />
+									<span class="hero-brand-text">KS Studio.</span>
+								</a>
+							<button
+								type="button"
+								class="nav-toggle"
+								aria-label="Ouvrir le menu"
+								aria-expanded="false"
+								aria-controls="site-nav"
+								data-nav-toggle
+							>
+								<span class="nav-toggle-bar" aria-hidden="true"></span>
+								<span class="nav-toggle-bar" aria-hidden="true"></span>
+								<span class="nav-toggle-bar" aria-hidden="true"></span>
+							</button>
+							<nav
+								id="site-nav"
+								aria-label="Navigation principale"
+								class="hero-nav"
+								data-nav-menu
+							>
+							<a href="/" class={path === "/" ? "is-active" : undefined}>Accueil</a>
+							<a href="/a-propos" class={path === "/a-propos" ? "is-active" : undefined}
+								>À propos</a
+							>
+							<a href="/contact" class={path === "/contact" ? "is-active" : undefined}
+								>Contact</a
+							>
+							<a
+								href="/reservation"
+								class={`hero-pill ${path === "/reservation" ? "is-active-pill" : ""}`}
+							>
+								Réserver
+							</a>
+						</nav>
+					</div>
+				</header>
+			)
+		}
+		<main>
+			<slot />
+		</main>
+		{
+			showFooter && (
+				<footer class="site-footer">
+					<div class="container footer-wrap">
+						<div class="footer-brand">
+							<p class="footer-title">KS Studio - Institut d'onglerie</p>
+						</div>
+						<div class="footer-links">
+							<a href="/contact">Contact</a>
+							<a href="/mentions-legales">Mentions légales</a>
+							<button type="button" class="footer-cookie-btn" data-open-cookie-banner>
+								Cookies
+							</button>
+						</div>
+						<ul class="footer-social-list" aria-label="Réseaux sociaux">
+							<li>
+								<a
+									href="https://instagram.com/_ksstudiio"
+									target="_blank"
+									rel="noreferrer noopener"
+									class="footer-social-link"
+								>
+									<span class="footer-social-icon" aria-hidden="true">
+										<svg viewBox="0 0 24 24" role="img" focusable="false" class="icon-instagram">
+											<rect x="4" y="4" width="16" height="16" rx="4.5"></rect>
+											<circle cx="12" cy="12" r="4"></circle>
+											<circle cx="17.25" cy="6.75" r="1.05"></circle>
+										</svg>
+									</span>
+									<span>Instagram</span>
+								</a>
+							</li>
+							<li>
+								<a
+									href="https://www.tiktok.com/@_ksstudiio"
+									target="_blank"
+									rel="noreferrer noopener"
+									class="footer-social-link"
+								>
+									<span class="footer-social-icon" aria-hidden="true">
+										<svg viewBox="0 0 24 24" role="img" focusable="false" class="icon-tiktok">
+											<path d="M14 3v2.3c0 1.5 1.2 2.7 2.7 2.7H19v3.1c-1.9 0-3.7-.6-5-1.8v6.2a5.3 5.3 0 1 1-5.3-5.3h.6v3.1h-.6a2.2 2.2 0 1 0 2.2 2.2V3H14z"></path>
+										</svg>
+									</span>
+									<span>TikTok</span>
+								</a>
+							</li>
+						</ul>
+					</div>
+						<div class="container footer-bottom">
+							<p class="footer-credit">
+								Site créé par
+								<a
+									href="https://instagram.com/aa.webagence"
+									target="_blank"
+								rel="noreferrer noopener"
+							>
+								A&amp;A web agence
+							</a>
+						</p>
+						<p class="footer-bottom-note">© {currentYear} KS Studio</p>
+					</div>
+				</footer>
+				)
+			}
+			<div class="cookie-banner" data-cookie-banner hidden role="dialog" aria-label="Préférences cookies">
+				<p>
+					Nous utilisons des cookies pour mesurer l’audience du site. Vous pouvez accepter ou refuser.
+					<a href="/mentions-legales#cookies">En savoir plus</a>
+				</p>
+				<div class="cookie-banner-actions">
+					<button type="button" class="btn btn-ghost btn-sm" data-cookie-reject>Refuser</button>
+					<button type="button" class="btn btn-sm" data-cookie-accept>Accepter</button>
+				</div>
+			</div>
+			<script is:inline>
+				(() => {
+					const run = () => {
+						const images = document.querySelectorAll("img.media-smooth");
+						images.forEach((image) => {
+							if (!(image instanceof HTMLImageElement)) return;
+							const markLoaded = () => image.classList.add("is-loaded");
+							if (image.complete) {
+								requestAnimationFrame(markLoaded);
+								return;
+							}
+							image.addEventListener("load", markLoaded, { once: true });
+							image.addEventListener("error", markLoaded, { once: true });
+						});
+					};
+
+					if ("requestIdleCallback" in window) {
+						window.requestIdleCallback(run, { timeout: 900 });
+					} else {
+						requestAnimationFrame(run);
+					}
+				})();
+			</script>
+			<script is:inline>
+				(() => {
+					const run = () => {
+						const selector = [
+							".content-block",
+							".card",
+							".contact-card",
+							".service-tile",
+							".wide-feature",
+							".gallery-card",
+							".price-tile",
+							".review-card",
+							".bottom-cta",
+							".booking-head",
+							".booking-steps",
+							".booking-step-panel",
+							".booking-addons",
+							".service-choice",
+							".slot-pill",
+							".admin-header-card",
+							".admin-kpi-card",
+							".admin-panel",
+							".admin-item",
+							".legal-card"
+						].join(",");
+
+						const hasReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+						let revealIndex = 0;
+						let observer = null;
+						const seen = new WeakSet();
+
+						const revealNow = (element) => {
+							if (!(element instanceof HTMLElement)) return;
+							element.classList.add("is-visible");
+						};
+
+						const register = (element) => {
+							if (!(element instanceof HTMLElement)) return;
+							if (seen.has(element)) return;
+							if (element.closest(".hero-panel")) return;
+							seen.add(element);
+							element.classList.add("reveal-item");
+							const delay = Math.min(revealIndex * 38, 280);
+							element.style.setProperty("--reveal-delay", `${delay}ms`);
+							revealIndex += 1;
+
+							if (hasReducedMotion) {
+								revealNow(element);
+								return;
+							}
+
+							if (observer) {
+								observer.observe(element);
+								return;
+							}
+
+							revealNow(element);
+						};
+
+						const scan = (root) => {
+							if (!(root instanceof HTMLElement || root instanceof Document)) return;
+							if (root instanceof HTMLElement && root.matches(selector)) {
+								register(root);
+							}
+							root.querySelectorAll(selector).forEach((element) => {
+								register(element);
+							});
+						};
+
+						if (!hasReducedMotion && "IntersectionObserver" in window) {
+							observer = new IntersectionObserver(
+								(entries) => {
+									entries.forEach((entry) => {
+										if (!entry.isIntersecting) return;
+										const element = entry.target;
+										if (element instanceof HTMLElement) {
+											revealNow(element);
+										}
+										observer?.unobserve(entry.target);
+									});
+								},
+								{
+									threshold: 0.16,
+									rootMargin: "0px 0px -8% 0px"
+								}
+							);
+						}
+
+						scan(document);
+					};
+
+					if ("requestIdleCallback" in window) {
+						window.requestIdleCallback(run, { timeout: 1000 });
+					} else {
+						window.setTimeout(run, 90);
+					}
+				})();
+			</script>
+			<script is:inline>
+				(() => {
+					const navToggle = document.querySelector("[data-nav-toggle]");
+					const navMenu = document.querySelector("[data-nav-menu]");
+				if (!(navToggle instanceof HTMLButtonElement) || !(navMenu instanceof HTMLElement)) return;
+
+				const mobileQuery = window.matchMedia("(max-width: 760px)");
+
+				const closeMenu = () => {
+					navToggle.setAttribute("aria-expanded", "false");
+					navToggle.setAttribute("aria-label", "Ouvrir le menu");
+					navMenu.classList.remove("is-open");
+				};
+
+				const openMenu = () => {
+					navToggle.setAttribute("aria-expanded", "true");
+					navToggle.setAttribute("aria-label", "Fermer le menu");
+					navMenu.classList.add("is-open");
+				};
+
+				navToggle.addEventListener("click", () => {
+					const isOpen = navMenu.classList.contains("is-open");
+					if (isOpen) {
+						closeMenu();
+						return;
+					}
+					openMenu();
+				});
+
+				navMenu.querySelectorAll("a").forEach((link) => {
+					link.addEventListener("click", () => {
+						if (!mobileQuery.matches) return;
+						closeMenu();
+					});
+				});
+
+				window.addEventListener("resize", () => {
+					if (!mobileQuery.matches) closeMenu();
+				});
+
+				document.addEventListener("keydown", (event) => {
+					if (event.key !== "Escape") return;
+					closeMenu();
+				});
+			})();
+		</script>
+		<script is:inline>
+			(() => {
+				const cookieBanner = document.querySelector("[data-cookie-banner]");
+				if (!(cookieBanner instanceof HTMLElement)) return;
+
+				const acceptButton = cookieBanner.querySelector("[data-cookie-accept]");
+				const rejectButton = cookieBanner.querySelector("[data-cookie-reject]");
+				const openButtons = document.querySelectorAll("[data-open-cookie-banner]");
+				const consentCookieName = "ks_cookie_consent";
+				const consentMaxAgeSeconds = 60 * 60 * 24 * 180;
+
+				if (!(acceptButton instanceof HTMLButtonElement)) return;
+				if (!(rejectButton instanceof HTMLButtonElement)) return;
+
+				const readCookie = (name) => {
+					const prefix = `${name}=`;
+					const cookieParts = document.cookie.split(";");
+					for (const cookiePart of cookieParts) {
+						const value = cookiePart.trim();
+						if (!value.startsWith(prefix)) continue;
+						return decodeURIComponent(value.slice(prefix.length));
+					}
+					return "";
+				};
+
+				const saveConsent = (value) => {
+					const secureFlag = window.location.protocol === "https:" ? "; Secure" : "";
+					document.cookie = `${consentCookieName}=${encodeURIComponent(value)}; Max-Age=${consentMaxAgeSeconds}; Path=/; SameSite=Lax${secureFlag}`;
+				};
+
+				const showBanner = () => {
+					cookieBanner.hidden = false;
+				};
+
+				const hideBanner = () => {
+					cookieBanner.hidden = true;
+				};
+
+				const applyConsent = (value) => {
+					saveConsent(value);
+					if (value === "rejected") {
+						try {
+							window.localStorage.removeItem("ks_visitor_session_id");
+						} catch {}
+					}
+					hideBanner();
+					window.dispatchEvent(new CustomEvent("ks:cookie-consent", { detail: value }));
+				};
+
+				const existingConsent = readCookie(consentCookieName);
+				if (existingConsent !== "accepted" && existingConsent !== "rejected") {
+					showBanner();
+				}
+
+				openButtons.forEach((button) => {
+					button.addEventListener("click", () => {
+						showBanner();
+					});
+				});
+
+				acceptButton.addEventListener("click", () => {
+					applyConsent("accepted");
+				});
+
+					rejectButton.addEventListener("click", () => {
+						applyConsent("rejected");
+					});
+				})();
+			</script>
+			{
+				analyticsEnabled && (
+					<script is:inline>
+						(() => {
+							const run = () => {
+								const endpoint = "/api/analytics/track";
+								const storageKey = "ks_visitor_session_id";
+								const consentCookieName = "ks_cookie_consent";
+								const heartbeatMs = 30_000;
+								const maxReferrerLength = 500;
+
+								if (typeof window === "undefined") return;
+								if (/bot|crawler|spider|crawling/i.test(navigator.userAgent)) return;
+
+								const readCookie = (name) => {
+									const prefix = `${name}=`;
+									const cookieParts = document.cookie.split(";");
+									for (const cookiePart of cookieParts) {
+										const value = cookiePart.trim();
+										if (!value.startsWith(prefix)) continue;
+										return decodeURIComponent(value.slice(prefix.length));
+									}
+									return "";
+								};
+
+								const hasAnalyticsConsent = () => readCookie(consentCookieName) === "accepted";
+								let consentGranted = hasAnalyticsConsent();
+								let analyticsStarted = false;
+								let sessionId = "";
+								let heartbeatTimer = null;
+								const onVisibilityChange = () => {
+									if (!document.hidden) sendEvent("heartbeat");
+								};
+
+								const createSessionId = () => {
+									if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+										return crypto.randomUUID().replaceAll("-", "");
+									}
+									const randomPart = Math.random().toString(36).slice(2, 14);
+									return `${Date.now().toString(36)}${randomPart}`;
+								};
+
+								const getSessionId = () => {
+									try {
+										const existing = window.localStorage.getItem(storageKey);
+										if (existing && existing.length >= 12) return existing;
+										const generated = createSessionId();
+										window.localStorage.setItem(storageKey, generated);
+										return generated;
+									} catch {
+										return createSessionId();
+									}
+								};
+
+								const pagePath = `${window.location.pathname}${window.location.search}`;
+								const referrer = String(document.referrer ?? "").slice(0, maxReferrerLength);
+
+								const sendEvent = (eventType) => {
+									if (!consentGranted || !sessionId) return;
+									const payload = JSON.stringify({
+										eventType,
+										sessionId,
+										path: pagePath,
+										referrer
+									});
+
+									if (typeof navigator.sendBeacon === "function") {
+										const blob = new Blob([payload], { type: "application/json" });
+										navigator.sendBeacon(endpoint, blob);
+										return;
+									}
+
+									fetch(endpoint, {
+										method: "POST",
+										headers: { "content-type": "application/json" },
+										body: payload,
+										keepalive: true
+									}).catch(() => {});
+								};
+
+								const startAnalytics = () => {
+									if (!consentGranted || analyticsStarted) return;
+									analyticsStarted = true;
+									sessionId = getSessionId();
+									sendEvent("page_view");
+									heartbeatTimer = window.setInterval(() => {
+										sendEvent("heartbeat");
+									}, heartbeatMs);
+									document.addEventListener("visibilitychange", onVisibilityChange);
+								};
+
+								if (consentGranted) {
+									startAnalytics();
+								}
+
+								window.addEventListener("ks:cookie-consent", (event) => {
+									if (!(event instanceof CustomEvent)) return;
+									if (event.detail === "accepted") {
+										consentGranted = true;
+										startAnalytics();
+									}
+									if (event.detail === "rejected") {
+										consentGranted = false;
+										analyticsStarted = false;
+										sessionId = "";
+										if (heartbeatTimer) {
+											window.clearInterval(heartbeatTimer);
+											heartbeatTimer = null;
+										}
+										document.removeEventListener("visibilitychange", onVisibilityChange);
+									}
+								});
+							};
+
+							if ("requestIdleCallback" in window) {
+								window.requestIdleCallback(run, { timeout: 1600 });
+							} else {
+								window.setTimeout(run, 350);
+							}
+						})();
+					</script>
+				)
+			}
+		</body>
+</html>

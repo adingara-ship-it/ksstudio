@@ -1,0 +1,70 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+	title="Admin Login | KS Studio"
+	description="Connexion administrateur"
+	showHeader={false}
+	showFooter={false}
+	showAnalytics={false}
+>
+	<section class="section admin-page">
+		<div class="container admin-shell admin-login-shell">
+			<div class="admin-auth-card admin-auth-card-premium">
+				<p class="admin-eyebrow">Accès protégé</p>
+				<h1 class="section-title">Connexion administrateur</h1>
+				<p class="section-intro">Accès réservé à la gestion des disponibilités et rendez-vous.</p>
+
+				<form id="admin-login-form" class="booking-form">
+					<div class="booking-field">
+						<label for="admin-email">Email admin</label>
+						<input id="admin-email" name="email" type="email" required />
+					</div>
+
+					<div class="booking-field">
+						<label for="admin-password">Mot de passe</label>
+						<input id="admin-password" name="password" type="password" required />
+					</div>
+
+					<button type="submit" class="btn">Se connecter</button>
+				</form>
+
+				<p id="admin-login-status" class="booking-status" aria-live="polite"></p>
+			</div>
+		</div>
+	</section>
+
+	<script>
+		(() => {
+			const form = document.getElementById("admin-login-form");
+			const statusNode = document.getElementById("admin-login-status");
+			if (!(form instanceof HTMLFormElement) || !(statusNode instanceof HTMLElement)) return;
+
+			form.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				statusNode.textContent = "";
+
+				const formData = new FormData(form);
+				const payload = {
+					email: String(formData.get("email") ?? ""),
+					password: String(formData.get("password") ?? "")
+				};
+
+				const response = await fetch("/api/admin/login", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify(payload)
+				});
+
+				if (!response.ok) {
+					statusNode.textContent = "Identifiants invalides.";
+					statusNode.dataset.state = "error";
+					return;
+				}
+
+				window.location.href = "/admin";
+			});
+		})();
+	</script>
+</BaseLayout>

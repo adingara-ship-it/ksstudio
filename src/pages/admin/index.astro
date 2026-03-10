@@ -1,0 +1,652 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { isAdminAuthenticated } from "../../lib/adminAuth";
+
+if (!isAdminAuthenticated(Astro.cookies)) {
+	return Astro.redirect("/admin/login");
+}
+---
+
+<BaseLayout
+	title="Admin | KS Studio"
+	description="Gestion des rendez-vous et disponibilités"
+	showHeader={false}
+	showFooter={false}
+	showAnalytics={false}
+>
+	<section class="section admin-page">
+		<div class="container admin-shell">
+			<div class="admin-header-row admin-header-card">
+				<div>
+					<p class="admin-eyebrow">Espace administration</p>
+					<h1 class="section-title">Tableau de bord</h1>
+					<p class="section-intro">Gérez les disponibilités et les rendez-vous confirmés en un seul endroit.</p>
+				</div>
+				<div class="admin-header-actions">
+					<a href="/admin/analytics" class="btn btn-ghost">Affluence</a>
+					<a href="/admin/corbeille" class="btn btn-ghost">Corbeille</a>
+					<button id="admin-logout-btn" class="btn btn-ghost">Se déconnecter</button>
+				</div>
+			</div>
+
+			<div class="admin-kpi-grid">
+				<article class="admin-kpi-card">
+					<p class="admin-kpi-label">Créneaux totaux</p>
+					<p class="admin-kpi-value" id="admin-stat-total-slots">0</p>
+				</article>
+				<article class="admin-kpi-card">
+					<p class="admin-kpi-label">Disponibles</p>
+					<p class="admin-kpi-value" id="admin-stat-open-slots">0</p>
+				</article>
+				<article class="admin-kpi-card">
+					<p class="admin-kpi-label">Rendez-vous confirmés</p>
+					<p class="admin-kpi-value" id="admin-stat-active-bookings">0</p>
+				</article>
+				<article class="admin-kpi-card">
+					<p class="admin-kpi-label">Annulés (corbeille)</p>
+					<p class="admin-kpi-value" id="admin-stat-cancelled-bookings">0</p>
+				</article>
+			</div>
+
+			<div class="admin-grid">
+				<section class="content-block admin-panel">
+					<h2 class="admin-section-title">Ajouter des créneaux</h2>
+					<p class="section-intro">
+						Par défaut: mardi, mercredi, vendredi et samedi. Vous pouvez retirer un créneau ou en ajouter manuellement.
+					</p>
+						<form id="availability-form" class="booking-form">
+							<div class="booking-grid">
+								<div class="booking-field">
+									<label for="availability-date">Date</label>
+									<input id="availability-date" name="date" type="date" required />
+								</div>
+								<div class="booking-field">
+									<label for="availability-time">Heure du créneau</label>
+									<input id="availability-time" name="time" type="time" required />
+								</div>
+							</div>
+
+							<div class="quick-select-section">
+								<p class="quick-select-title">Sélection rapide date</p>
+								<div id="availability-date-quick" class="quick-select-grid"></div>
+							</div>
+
+							<div class="quick-select-section">
+								<p class="quick-select-title">Sélection rapide heure</p>
+								<div id="availability-time-quick" class="quick-select-grid"></div>
+							</div>
+
+							<button class="btn" type="submit">Ajouter le créneau</button>
+						</form>
+
+					<p id="availability-status" class="booking-status" aria-live="polite"></p>
+
+						<div class="admin-list-wrap">
+							<h3 class="admin-subtitle">Disponibilités à venir</h3>
+						<div class="availability-week-nav">
+							<button
+								id="availability-week-prev"
+								type="button"
+								class="btn btn-ghost btn-sm"
+								aria-label="Semaine précédente"
+							>
+								Semaine précédente
+							</button>
+							<p id="availability-week-label" class="availability-week-label">Chargement...</p>
+							<button
+								id="availability-week-next"
+								type="button"
+								class="btn btn-ghost btn-sm"
+								aria-label="Semaine suivante"
+							>
+								Semaine suivante
+							</button>
+						</div>
+						<div id="availability-list" class="admin-list"></div>
+					</div>
+				</section>
+
+				<section class="content-block admin-panel">
+					<h2 class="admin-section-title">Rendez-vous en cours</h2>
+					<p id="booking-status" class="booking-status" aria-live="polite"></p>
+					<div id="bookings-list" class="admin-list"></div>
+				</section>
+			</div>
+		</div>
+	</section>
+
+	<script>
+		(() => {
+			const availabilityForm = document.getElementById("availability-form");
+			const availabilityStatus = document.getElementById("availability-status");
+			const availabilityList = document.getElementById("availability-list");
+			const bookingsList = document.getElementById("bookings-list");
+			const bookingStatus = document.getElementById("booking-status");
+			const logoutButton = document.getElementById("admin-logout-btn");
+			const totalSlotsNode = document.getElementById("admin-stat-total-slots");
+			const openSlotsNode = document.getElementById("admin-stat-open-slots");
+			const activeBookingsNode = document.getElementById("admin-stat-active-bookings");
+			const cancelledBookingsNode = document.getElementById("admin-stat-cancelled-bookings");
+			const weekPrevButton = document.getElementById("availability-week-prev");
+			const weekNextButton = document.getElementById("availability-week-next");
+			const weekLabelNode = document.getElementById("availability-week-label");
+			const availabilityDateInput = document.getElementById("availability-date");
+			const availabilityTimeInput = document.getElementById("availability-time");
+			const quickDateContainer = document.getElementById("availability-date-quick");
+			const quickTimeContainer = document.getElementById("availability-time-quick");
+
+			if (!(availabilityForm instanceof HTMLFormElement)) return;
+			if (!(availabilityStatus instanceof HTMLElement)) return;
+			if (!(availabilityList instanceof HTMLElement)) return;
+			if (!(bookingsList instanceof HTMLElement)) return;
+			if (!(bookingStatus instanceof HTMLElement)) return;
+			if (!(logoutButton instanceof HTMLButtonElement)) return;
+			if (!(totalSlotsNode instanceof HTMLElement)) return;
+			if (!(openSlotsNode instanceof HTMLElement)) return;
+			if (!(activeBookingsNode instanceof HTMLElement)) return;
+			if (!(cancelledBookingsNode instanceof HTMLElement)) return;
+			if (!(weekPrevButton instanceof HTMLButtonElement)) return;
+			if (!(weekNextButton instanceof HTMLButtonElement)) return;
+			if (!(weekLabelNode instanceof HTMLElement)) return;
+			if (!(availabilityDateInput instanceof HTMLInputElement)) return;
+			if (!(availabilityTimeInput instanceof HTMLInputElement)) return;
+			if (!(quickDateContainer instanceof HTMLElement)) return;
+			if (!(quickTimeContainer instanceof HTMLElement)) return;
+
+			const formatDate = (isoDate) =>
+				new Intl.DateTimeFormat("fr-FR", {
+					weekday: "short",
+					day: "2-digit",
+					month: "2-digit",
+					hour: "2-digit",
+					minute: "2-digit"
+				}).format(new Date(isoDate));
+
+			const escapeHtml = (value) =>
+				String(value ?? "")
+					.replaceAll("&", "&amp;")
+					.replaceAll("<", "&lt;")
+					.replaceAll(">", "&gt;")
+					.replaceAll('"', "&quot;")
+					.replaceAll("'", "&#39;");
+
+			const setStatus = (node, message, state = "neutral") => {
+				node.textContent = message;
+				node.dataset.state = state;
+			};
+
+			const setMetric = (node, value) => {
+				node.textContent = String(value);
+			};
+
+			const QUICK_TIMES = ["09:30", "13:00", "15:30", "17:30"];
+			const DEFAULT_WORK_DAYS = new Set([2, 3, 5, 6]);
+
+			let availabilitySlots = [];
+			let availabilityWeekStart = null;
+			let minAvailabilityWeekStart = null;
+			let maxAvailabilityWeekStart = null;
+			let quickDatesDayAnchor = "";
+
+			const getDateKey = (date) => {
+				const year = date.getFullYear();
+				const month = String(date.getMonth() + 1).padStart(2, "0");
+				const day = String(date.getDate()).padStart(2, "0");
+				return `${year}-${month}-${day}`;
+			};
+
+			const toDayDate = (isoDate) => {
+				const date = new Date(isoDate);
+				return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+			};
+
+			const startOfWeek = (date) => {
+				const base = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+				const mondayOffset = (base.getDay() + 6) % 7;
+				base.setDate(base.getDate() - mondayOffset);
+				base.setHours(0, 0, 0, 0);
+				return base;
+			};
+
+			const addDays = (date, value) => {
+				const next = new Date(date.getTime());
+				next.setDate(next.getDate() + value);
+				return next;
+			};
+
+			const getTodayStart = () => {
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				return today;
+			};
+
+			const getNextDefaultWorkDay = (baseDate) => {
+				let nextDate = new Date(baseDate.getTime());
+				while (!DEFAULT_WORK_DAYS.has(nextDate.getDay())) {
+					nextDate = addDays(nextDate, 1);
+				}
+				return nextDate;
+			};
+
+			const toDateInputValue = (date) => {
+				const year = date.getFullYear();
+				const month = String(date.getMonth() + 1).padStart(2, "0");
+				const day = String(date.getDate()).padStart(2, "0");
+				return `${year}-${month}-${day}`;
+			};
+
+			const formatQuickDateLabel = (date) =>
+				new Intl.DateTimeFormat("fr-FR", {
+					weekday: "short",
+					day: "2-digit",
+					month: "2-digit"
+				}).format(date);
+
+			const buildQuickDateOptions = () => {
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				return Array.from({ length: 14 }, (_, index) => {
+					const dayDate = addDays(today, index);
+					const value = toDateInputValue(dayDate);
+					const label = formatQuickDateLabel(dayDate);
+					const isDefaultDay = DEFAULT_WORK_DAYS.has(dayDate.getDay());
+					return { value, label, isDefaultDay };
+				});
+			};
+
+			const renderQuickDateButtons = () => {
+				const options = buildQuickDateOptions();
+				quickDateContainer.innerHTML = options
+					.map(
+						(option) => `
+							<button
+								type="button"
+								class="quick-select-chip ${availabilityDateInput.value === option.value ? "is-selected" : ""} ${option.isDefaultDay ? "is-default-day" : ""}"
+								data-quick-date="${option.value}"
+							>
+								${option.label}${option.isDefaultDay ? " *" : ""}
+							</button>
+						`
+					)
+					.join("");
+			};
+
+			const renderQuickTimeButtons = () => {
+				quickTimeContainer.innerHTML = QUICK_TIMES
+					.map(
+						(time) => `
+							<button
+								type="button"
+								class="quick-select-chip ${availabilityTimeInput.value === time ? "is-selected" : ""}"
+								data-quick-time="${time}"
+							>
+								${time}
+							</button>
+						`
+					)
+					.join("");
+			};
+
+			const refreshQuickDateOptionsIfNeeded = (force = false) => {
+				const today = getTodayStart();
+				const todayKey = toDateInputValue(today);
+
+				if (!force && quickDatesDayAnchor === todayKey) return;
+				quickDatesDayAnchor = todayKey;
+				availabilityDateInput.min = todayKey;
+
+				if (!availabilityDateInput.value || availabilityDateInput.value < todayKey) {
+					const defaultDay = getNextDefaultWorkDay(today);
+					availabilityDateInput.value = toDateInputValue(defaultDay);
+				}
+
+				renderQuickDateButtons();
+			};
+
+			const applyQuickDefaults = () => {
+				refreshQuickDateOptionsIfNeeded(true);
+				if (!availabilityTimeInput.value) {
+					availabilityTimeInput.value = QUICK_TIMES[0];
+				}
+				renderQuickTimeButtons();
+			};
+
+			const clampAvailabilityWeekStart = (candidate) => {
+				if (!minAvailabilityWeekStart || !maxAvailabilityWeekStart) return candidate;
+				if (candidate.getTime() < minAvailabilityWeekStart.getTime()) {
+					return new Date(minAvailabilityWeekStart.getTime());
+				}
+				if (candidate.getTime() > maxAvailabilityWeekStart.getTime()) {
+					return new Date(maxAvailabilityWeekStart.getTime());
+				}
+				return candidate;
+			};
+
+			const formatWeekRange = (weekStart) => {
+				const weekEnd = addDays(weekStart, 6);
+				const dayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "2-digit" });
+				const monthYearFormatter = new Intl.DateTimeFormat("fr-FR", {
+					month: "long",
+					year: "numeric"
+				});
+				return `Semaine du ${dayFormatter.format(weekStart)} au ${dayFormatter.format(weekEnd)} ${monthYearFormatter.format(weekEnd)}`;
+			};
+
+			const formatDayName = (date) =>
+				new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(date);
+
+			const formatDayLabel = (date) =>
+				new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long" }).format(date);
+
+			const formatTime = (isoDate) =>
+				new Intl.DateTimeFormat("fr-FR", {
+					hour: "2-digit",
+					minute: "2-digit"
+				}).format(new Date(isoDate));
+
+			const renderAvailabilityWeek = () => {
+				if (availabilitySlots.length === 0 || !availabilityWeekStart) {
+					weekLabelNode.textContent = "Aucun créneau";
+					weekPrevButton.disabled = true;
+					weekNextButton.disabled = true;
+					availabilityList.innerHTML = `<p class="slots-placeholder">Aucun créneau configuré.</p>`;
+					return;
+				}
+
+				const grouped = new Map();
+				availabilitySlots.forEach((slot) => {
+					const dateKey = getDateKey(toDayDate(slot.slot_at));
+					const daySlots = grouped.get(dateKey) ?? [];
+					daySlots.push(slot);
+					grouped.set(dateKey, daySlots);
+				});
+
+				const dayCards = [];
+				for (let index = 0; index < 7; index += 1) {
+					const dayDate = addDays(availabilityWeekStart, index);
+					const dayKey = getDateKey(dayDate);
+					const daySlots = (grouped.get(dayKey) ?? []).sort((a, b) =>
+						String(a.slot_at).localeCompare(String(b.slot_at))
+					);
+
+					const slotsHtml =
+						daySlots.length === 0
+							? `<p class="availability-day-empty">Aucun créneau</p>`
+							: daySlots
+									.map(
+										(slot) => `
+											<button
+												type="button"
+												class="availability-chip ${slot.is_available ? "" : "is-booked"}"
+												data-remove-slot="${slot.id}"
+												${slot.is_available ? "" : "disabled"}
+											>
+												<span class="availability-chip-time">${formatTime(slot.slot_at)}</span>
+												<span class="availability-chip-action">${slot.is_available ? "Retirer" : "Réservé"}</span>
+											</button>
+										`
+									)
+									.join("");
+
+					dayCards.push(`
+						<article class="availability-day-card">
+							<p class="availability-day-name">${formatDayName(dayDate)}</p>
+							<p class="availability-day-date">${formatDayLabel(dayDate)}</p>
+							<div class="availability-chip-list">${slotsHtml}</div>
+						</article>
+					`);
+				}
+
+				availabilityList.innerHTML = `<div class="availability-week-grid">${dayCards.join("")}</div>`;
+				weekLabelNode.textContent = formatWeekRange(availabilityWeekStart);
+				weekPrevButton.disabled =
+					!minAvailabilityWeekStart ||
+					availabilityWeekStart.getTime() <= minAvailabilityWeekStart.getTime();
+				weekNextButton.disabled =
+					!maxAvailabilityWeekStart ||
+					availabilityWeekStart.getTime() >= maxAvailabilityWeekStart.getTime();
+			};
+
+			const loadAvailability = async () => {
+				const response = await fetch("/api/admin/availability");
+				if (!response.ok) throw new Error("Impossible de charger les disponibilités.");
+				const payload = await response.json();
+				const slots = payload.slots ?? [];
+				availabilitySlots = slots;
+				const totalSlots = slots.length;
+				const openSlots = slots.filter((slot) => slot.is_available).length;
+				setMetric(totalSlotsNode, totalSlots);
+				setMetric(openSlotsNode, openSlots);
+
+				if (slots.length === 0) {
+					availabilityWeekStart = null;
+					minAvailabilityWeekStart = null;
+					maxAvailabilityWeekStart = null;
+					renderAvailabilityWeek();
+					return;
+				}
+
+				const firstWeek = startOfWeek(toDayDate(slots[0].slot_at));
+				const lastWeek = startOfWeek(toDayDate(slots[slots.length - 1].slot_at));
+				minAvailabilityWeekStart = firstWeek;
+				maxAvailabilityWeekStart = lastWeek;
+
+				if (!availabilityWeekStart) {
+					availabilityWeekStart = clampAvailabilityWeekStart(startOfWeek(new Date()));
+				} else {
+					availabilityWeekStart = clampAvailabilityWeekStart(availabilityWeekStart);
+				}
+
+				renderAvailabilityWeek();
+			};
+
+			const loadBookings = async () => {
+				const response = await fetch("/api/admin/bookings");
+				if (!response.ok) throw new Error("Impossible de charger les rendez-vous.");
+				const payload = await response.json();
+				const activeBookings =
+					payload.activeBookings ??
+					(payload.bookings ?? []).filter((booking) => booking.status === "confirmed");
+				const cancelledBookings =
+					payload.cancelledBookings ??
+					(payload.bookings ?? []).filter((booking) => booking.status === "cancelled");
+				setMetric(activeBookingsNode, activeBookings.length);
+				setMetric(cancelledBookingsNode, cancelledBookings.length);
+
+				if (activeBookings.length === 0) {
+					bookingsList.innerHTML = `<p class="slots-placeholder">Aucun rendez-vous pour le moment.</p>`;
+					} else {
+						bookingsList.innerHTML = activeBookings
+							.map((booking) => {
+								const customer = `${booking.first_name ?? ""} ${booking.last_name ?? ""}`.trim();
+								const slotLabel = formatDate(booking.slot_at);
+								const bookingId = escapeHtml(booking.id);
+								const serviceName = escapeHtml(booking.service_name);
+								const customerSafe = escapeHtml(customer || "Cliente");
+								const phoneSafe = escapeHtml(booking.phone);
+								const emailSafe = escapeHtml(booking.email);
+								const slotLabelSafe = escapeHtml(slotLabel);
+								return `
+									<div class="admin-item">
+										<div class="admin-item-main">
+											<strong>${serviceName}</strong>
+											<p class="admin-item-meta">${slotLabelSafe}</p>
+											<p class="admin-item-meta">${customerSafe}</p>
+											<p class="admin-item-meta">${phoneSafe} | ${emailSafe}</p>
+										</div>
+										<div class="admin-item-actions">
+											<span class="admin-state-pill is-confirmed">Confirmé</span>
+											<button class="btn btn-ghost btn-sm" data-cancel-booking="${bookingId}">
+												Annuler
+											</button>
+										</div>
+									</div>
+								`;
+						})
+							.join("");
+					}
+			};
+
+			weekPrevButton.addEventListener("click", () => {
+				if (!availabilityWeekStart) return;
+				availabilityWeekStart = clampAvailabilityWeekStart(addDays(availabilityWeekStart, -7));
+				renderAvailabilityWeek();
+			});
+
+			weekNextButton.addEventListener("click", () => {
+				if (!availabilityWeekStart) return;
+				availabilityWeekStart = clampAvailabilityWeekStart(addDays(availabilityWeekStart, 7));
+				renderAvailabilityWeek();
+			});
+
+			quickDateContainer.addEventListener("click", (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLElement)) return;
+				const button = target.closest("[data-quick-date]");
+				if (!(button instanceof HTMLButtonElement)) return;
+				const value = button.dataset.quickDate;
+				if (!value) return;
+				availabilityDateInput.value = value;
+				renderQuickDateButtons();
+			});
+
+			quickTimeContainer.addEventListener("click", (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLElement)) return;
+				const button = target.closest("[data-quick-time]");
+				if (!(button instanceof HTMLButtonElement)) return;
+				const value = button.dataset.quickTime;
+				if (!value) return;
+				availabilityTimeInput.value = value;
+				renderQuickTimeButtons();
+			});
+
+			availabilityDateInput.addEventListener("change", () => {
+				renderQuickDateButtons();
+			});
+
+			availabilityTimeInput.addEventListener("change", () => {
+				renderQuickTimeButtons();
+			});
+
+			availabilityForm.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				const formData = new FormData(availabilityForm);
+
+				const payload = {
+					date: String(formData.get("date") ?? ""),
+					time: String(formData.get("time") ?? "")
+				};
+
+				const response = await fetch("/api/admin/availability", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify(payload)
+				});
+				const result = await response.json();
+
+					if (!response.ok) {
+						if (result.error === "NO_FUTURE_SLOTS") {
+							setStatus(
+								availabilityStatus,
+								"Aucun créneau futur pour cet horaire (heure déjà passée).",
+								"error"
+							);
+							return;
+						}
+
+					setStatus(availabilityStatus, "Erreur lors de la création des créneaux.", "error");
+					return;
+				}
+
+				const inserted = Number(result.inserted ?? result.generated ?? 0);
+				const duplicates = Number(result.ignoredDuplicates ?? 0);
+				const skippedPast = Number(result.skippedPast ?? 0);
+				const dateLabel = String(result.date ?? "");
+				const parts = [];
+				if (duplicates > 0) parts.push(`${duplicates} doublon${duplicates > 1 ? "s" : ""}`);
+				if (skippedPast > 0) {
+					parts.push(`${skippedPast} horaire${skippedPast > 1 ? "s" : ""} déjà passé${skippedPast > 1 ? "s" : ""}`);
+				}
+				const details = parts.length > 0 ? ` (${parts.join(", ")})` : "";
+
+				setStatus(
+					availabilityStatus,
+					`${inserted} créneau${inserted > 1 ? "x" : ""} ajouté${inserted > 1 ? "s" : ""} pour ${dateLabel}.${details}`,
+					"success"
+				);
+				await loadAvailability();
+			});
+
+			availabilityList.addEventListener("click", async (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLElement)) return;
+				const button = target.closest("[data-remove-slot]");
+				if (!(button instanceof HTMLButtonElement)) return;
+
+				const slotId = button.dataset.removeSlot;
+				if (!slotId) return;
+
+				const response = await fetch(`/api/admin/availability/${slotId}`, {
+					method: "DELETE"
+				});
+				if (!response.ok) {
+					setStatus(
+						availabilityStatus,
+						"Impossible de supprimer ce créneau (peut-être déjà réservé).",
+						"error"
+					);
+					return;
+				}
+
+				setStatus(availabilityStatus, "Créneau retiré du planning.", "success");
+				await loadAvailability();
+			});
+
+			bookingsList.addEventListener("click", async (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLElement)) return;
+				const button = target.closest("[data-cancel-booking]");
+				if (!(button instanceof HTMLButtonElement)) return;
+
+				const bookingId = button.dataset.cancelBooking;
+				if (!bookingId) return;
+
+				const response = await fetch(`/api/admin/bookings/${bookingId}/cancel`, {
+					method: "POST"
+				});
+				const result = await response.json().catch(() => ({}));
+				if (!response.ok) {
+					setStatus(bookingStatus, "Échec de l'annulation.", "error");
+					return;
+				}
+
+				if (result?.emailStatus?.sent) {
+					setStatus(bookingStatus, "Rendez-vous annulé et e-mail envoyé.", "success");
+				} else {
+					setStatus(bookingStatus, "Rendez-vous annulé (e-mail non envoyé).", "error");
+				}
+				await Promise.all([loadBookings(), loadAvailability()]);
+			});
+
+			logoutButton.addEventListener("click", async () => {
+				await fetch("/api/admin/logout", { method: "POST" });
+				window.location.href = "/admin/login";
+			});
+
+			applyQuickDefaults();
+			window.setInterval(() => {
+				refreshQuickDateOptionsIfNeeded();
+			}, 60_000);
+			document.addEventListener("visibilitychange", () => {
+				if (!document.hidden) {
+					refreshQuickDateOptionsIfNeeded();
+				}
+			});
+
+			Promise.all([loadAvailability(), loadBookings()]).catch(() => {
+				setStatus(bookingStatus, "Erreur de chargement du tableau de bord.", "error");
+			});
+		})();
+	</script>
+</BaseLayout>

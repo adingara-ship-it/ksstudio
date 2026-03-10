@@ -6,9 +6,13 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "db:check": "node --env-file=.env scripts/db-check.mjs"
   },
   "dependencies": {
-    "astro": "^5.17.1"
+    "@astrojs/node": "^9.5.4",
+    "@supabase/supabase-js": "^2.98.0",
+    "astro": "^5.17.1",
+    "nodemailer": "^8.0.1"
   }
 }

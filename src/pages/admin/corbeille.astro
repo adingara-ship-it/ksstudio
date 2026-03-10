@@ -1,0 +1,183 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { isAdminAuthenticated } from "../../lib/adminAuth";
+
+if (!isAdminAuthenticated(Astro.cookies)) {
+	return Astro.redirect("/admin/login");
+}
+---
+
+<BaseLayout
+	title="Corbeille | Admin KS Studio"
+	description="Rendez-vous annulés"
+	showHeader={false}
+	showFooter={false}
+	showAnalytics={false}
+>
+	<section class="section admin-page">
+		<div class="container admin-shell">
+			<div class="admin-header-row admin-header-card">
+				<div>
+					<p class="admin-eyebrow">Historique des annulations</p>
+					<h1 class="section-title">Corbeille</h1>
+					<p id="trash-note" class="section-intro">
+						Les rendez-vous annulés sont supprimés automatiquement après 7 jours.
+					</p>
+				</div>
+				<div class="admin-header-actions">
+					<a href="/admin" class="btn btn-ghost">Retour tableau de bord</a>
+					<button id="empty-trash-btn" class="btn btn-danger">Vider la corbeille</button>
+					<button id="admin-logout-btn" class="btn btn-ghost">Se déconnecter</button>
+				</div>
+			</div>
+
+			<div class="admin-kpi-grid admin-kpi-grid-compact">
+				<article class="admin-kpi-card">
+					<p class="admin-kpi-label">Rendez-vous annulés</p>
+					<p class="admin-kpi-value" id="trash-count">0</p>
+				</article>
+				<article class="admin-kpi-card">
+					<p class="admin-kpi-label">Suppression auto</p>
+					<p class="admin-kpi-value"><span id="trash-retention-days">7</span> jours</p>
+				</article>
+			</div>
+
+			<section class="content-block admin-panel">
+				<p id="trash-status" class="booking-status" aria-live="polite"></p>
+				<div id="trash-list" class="admin-list"></div>
+			</section>
+		</div>
+	</section>
+
+	<script>
+		(() => {
+			const trashList = document.getElementById("trash-list");
+			const trashStatus = document.getElementById("trash-status");
+			const trashNote = document.getElementById("trash-note");
+			const logoutButton = document.getElementById("admin-logout-btn");
+			const emptyTrashButton = document.getElementById("empty-trash-btn");
+			const trashCountNode = document.getElementById("trash-count");
+			const retentionDaysNode = document.getElementById("trash-retention-days");
+
+			if (!(trashList instanceof HTMLElement)) return;
+			if (!(trashStatus instanceof HTMLElement)) return;
+			if (!(trashNote instanceof HTMLElement)) return;
+			if (!(logoutButton instanceof HTMLButtonElement)) return;
+			if (!(emptyTrashButton instanceof HTMLButtonElement)) return;
+			if (!(trashCountNode instanceof HTMLElement)) return;
+			if (!(retentionDaysNode instanceof HTMLElement)) return;
+
+			const formatDate = (isoDate) =>
+				new Intl.DateTimeFormat("fr-FR", {
+					weekday: "short",
+					day: "2-digit",
+					month: "2-digit",
+					hour: "2-digit",
+					minute: "2-digit"
+				}).format(new Date(isoDate));
+
+			const escapeHtml = (value) =>
+				String(value ?? "")
+					.replaceAll("&", "&amp;")
+					.replaceAll("<", "&lt;")
+					.replaceAll(">", "&gt;")
+					.replaceAll('"', "&quot;")
+					.replaceAll("'", "&#39;");
+
+			const setStatus = (message, state = "neutral") => {
+				trashStatus.textContent = message;
+				trashStatus.dataset.state = state;
+			};
+
+			const loadTrash = async () => {
+				const response = await fetch("/api/admin/bookings");
+				if (!response.ok) throw new Error("Impossible de charger la corbeille.");
+				const payload = await response.json();
+				const cancelledBookings =
+					payload.cancelledBookings ??
+					(payload.bookings ?? []).filter((booking) => booking.status === "cancelled");
+				const retentionDays = Number(payload.retentionDays ?? 7);
+				trashCountNode.textContent = String(cancelledBookings.length);
+				retentionDaysNode.textContent = String(retentionDays);
+				emptyTrashButton.disabled = cancelledBookings.length === 0;
+
+				trashNote.textContent = `Les rendez-vous annulés sont supprimés automatiquement après ${retentionDays} jours.`;
+
+				if (cancelledBookings.length === 0) {
+					trashList.innerHTML = `<p class="slots-placeholder">Corbeille vide.</p>`;
+					return;
+				}
+
+				trashList.innerHTML = cancelledBookings
+					.map((booking) => {
+						const customer = `${booking.first_name ?? ""} ${booking.last_name ?? ""}`.trim();
+						const slotLabel = formatDate(booking.slot_at);
+						const cancelledLabel = booking.cancelled_at
+							? formatDate(booking.cancelled_at)
+							: "date inconnue";
+						const serviceName = escapeHtml(booking.service_name);
+						const customerSafe = escapeHtml(customer || "Cliente");
+						const phoneSafe = escapeHtml(booking.phone);
+						const emailSafe = escapeHtml(booking.email);
+						const slotLabelSafe = escapeHtml(slotLabel);
+						const cancelledLabelSafe = escapeHtml(cancelledLabel);
+						return `
+							<div class="admin-item">
+								<div class="admin-item-main">
+									<strong>${serviceName}</strong>
+									<p class="admin-item-meta">${slotLabelSafe}</p>
+										<p class="admin-item-meta">${customerSafe}</p>
+										<p class="admin-item-meta">${phoneSafe} | ${emailSafe}</p>
+										<p class="admin-item-meta">Annulé le ${cancelledLabelSafe}</p>
+									</div>
+								<div class="admin-item-actions">
+									<span class="admin-state-pill is-cancelled">Annulé</span>
+								</div>
+							</div>
+						`;
+					})
+					.join("");
+			};
+
+			logoutButton.addEventListener("click", async () => {
+				await fetch("/api/admin/logout", { method: "POST" });
+				window.location.href = "/admin/login";
+			});
+
+			emptyTrashButton.addEventListener("click", async () => {
+				const currentCount = Number(trashCountNode.textContent ?? "0");
+				if (!currentCount) {
+					setStatus("Corbeille déjà vide.", "neutral");
+					return;
+				}
+
+				const confirmed = window.confirm(
+					`Supprimer définitivement ${currentCount} rendez-vous annulé(s) ?`
+				);
+				if (!confirmed) return;
+
+				emptyTrashButton.disabled = true;
+				setStatus("Vidage de la corbeille en cours...", "neutral");
+
+				const response = await fetch("/api/admin/bookings?scope=cancelled", {
+					method: "DELETE"
+				});
+				const result = await response.json().catch(() => ({}));
+
+				if (!response.ok) {
+					setStatus("Impossible de vider la corbeille.", "error");
+					emptyTrashButton.disabled = false;
+					return;
+				}
+
+				const deleted = Number(result.deleted ?? 0);
+				setStatus(`Corbeille vidée (${deleted} rendez-vous supprimés).`, "success");
+				await loadTrash();
+			});
+
+			loadTrash().catch(() => {
+				setStatus("Erreur de chargement de la corbeille.", "error");
+			});
+		})();
+	</script>
+</BaseLayout>

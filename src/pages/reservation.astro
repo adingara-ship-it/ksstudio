@@ -1,0 +1,447 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SERVICE_OPTIONS } from "../lib/services";
+---
+
+<BaseLayout
+	title="Réservation | KS Studio"
+	description="Réservez votre prestation en quelques étapes."
+>
+	<section class="section booking-page">
+		<div class="container booking-shell">
+			<div class="booking-head">
+				<p class="booking-head-kicker">Réservation en ligne</p>
+				<h1 class="section-title">Choisissez votre prochain rendez-vous</h1>
+				<p class="section-intro">
+					Parcours en 4 étapes: prestation, date et créneau, informations, puis confirmation.
+				</p>
+			</div>
+
+			<div class="booking-card" data-booking-app data-services={JSON.stringify(SERVICE_OPTIONS)}>
+				<div class="booking-steps" aria-label="Étapes de réservation">
+					<div class="booking-step-pill is-active" data-pill-step="1">1. Service</div>
+					<div class="booking-step-pill" data-pill-step="2">2. Date et créneau</div>
+					<div class="booking-step-pill" data-pill-step="3">3. Infos</div>
+					<div class="booking-step-pill" data-pill-step="4">4. Confirmation</div>
+				</div>
+
+				<section class="booking-step-panel is-active" data-step-panel="1">
+					<h2 class="admin-section-title">Choisissez votre prestation</h2>
+					<div class="service-choice-grid" id="service-choice-grid">
+						{
+							SERVICE_OPTIONS.map((service) => (
+								<button
+									type="button"
+									class="service-choice"
+									data-service-code={service.code}
+									data-service-name={service.name}
+									data-service-price={service.priceLabel}
+								>
+									<span class="service-choice-main">
+										<strong>{service.name}</strong>
+										<em>{service.priceLabel}</em>
+									</span>
+										<span class="service-choice-meta">Durée estimée: {service.durationMinutes} min</span>
+									</button>
+								))
+						}
+					</div>
+
+					<div class="booking-addons">
+						<p class="booking-addons-title">Suppléments</p>
+						<ul>
+							<li><span>Taille L</span><strong>+5 EUR</strong></li>
+							<li><span>Taille XL</span><strong>+10 EUR</strong></li>
+							<li><span>Nail art niveau 1</span><strong>+10 EUR</strong></li>
+							<li><span>Nail art niveau 2</span><strong>+15 EUR</strong></li>
+						</ul>
+					</div>
+
+					<div class="booking-actions booking-actions-single">
+						<button id="to-step-2" type="button" class="btn" disabled>Continuer</button>
+					</div>
+				</section>
+
+				<section class="booking-step-panel" data-step-panel="2">
+					<h2 class="admin-section-title">Choisissez la date et l'heure</h2>
+					<p id="booking-selected-service" class="section-intro"></p>
+					<div class="booking-field">
+						<label for="booking-date">Date</label>
+						<select id="booking-date" name="date" disabled>
+							<option value="">Choisissez d’abord un service</option>
+						</select>
+					</div>
+					<div class="booking-field">
+						<label>Créneaux disponibles</label>
+						<div class="slots-grid" id="booking-slots">
+							<p class="slots-placeholder">Sélectionnez un service pour afficher les créneaux.</p>
+						</div>
+					</div>
+					<div class="booking-actions">
+						<button id="back-to-step-1" type="button" class="btn btn-ghost">Retour</button>
+						<button id="to-step-3" type="button" class="btn" disabled>Continuer</button>
+					</div>
+				</section>
+
+				<section class="booking-step-panel" data-step-panel="3">
+					<h2 class="admin-section-title">Vos informations</h2>
+					<p id="booking-recap-line" class="section-intro"></p>
+					<form id="booking-form" class="booking-form">
+						<div class="booking-grid">
+							<div class="booking-field">
+								<label for="first-name">Prénom</label>
+								<input
+									id="first-name"
+									name="firstName"
+									type="text"
+									autocomplete="given-name"
+									autocapitalize="words"
+									required
+								/>
+							</div>
+							<div class="booking-field">
+								<label for="last-name">Nom</label>
+								<input
+									id="last-name"
+									name="lastName"
+									type="text"
+									autocomplete="family-name"
+									autocapitalize="words"
+									required
+								/>
+							</div>
+						</div>
+						<div class="booking-grid">
+							<div class="booking-field">
+								<label for="phone-number">Téléphone</label>
+								<input
+									id="phone-number"
+									name="phone"
+									type="tel"
+									inputmode="tel"
+									autocomplete="tel"
+									placeholder="+32 ..."
+									required
+								/>
+							</div>
+							<div class="booking-field">
+								<label for="email-address">Email</label>
+								<input
+									id="email-address"
+									name="email"
+									type="email"
+									autocomplete="email"
+									inputmode="email"
+									autocapitalize="off"
+									autocorrect="off"
+									spellcheck="false"
+									required
+								/>
+							</div>
+						</div>
+						<div class="booking-actions">
+							<button id="back-to-step-2" type="button" class="btn btn-ghost">Retour</button>
+							<button type="submit" class="btn booking-submit">Confirmer le rendez-vous</button>
+						</div>
+						<p class="form-legal-note">
+							En confirmant, vous acceptez le traitement de vos données pour la gestion de votre
+							rendez-vous. Détails: <a href="/mentions-legales#formulaires">mentions légales</a>.
+						</p>
+					</form>
+				</section>
+
+				<section class="booking-step-panel booking-confirmation" data-step-panel="4">
+					<h2 class="admin-section-title">Réservation confirmée</h2>
+					<p id="booking-confirmed-line" class="section-intro"></p>
+					<p id="booking-confirmation-note">Un e-mail de confirmation vient d’être envoyé.</p>
+					<div class="booking-actions booking-actions-single">
+						<a href="/" class="btn">Retour à l’accueil</a>
+					</div>
+				</section>
+
+				<p id="booking-status" class="booking-status" aria-live="polite"></p>
+			</div>
+		</div>
+	</section>
+
+	<script>
+		(() => {
+			const app = document.querySelector("[data-booking-app]");
+			if (!(app instanceof HTMLElement)) return;
+
+			const serviceButtons = Array.from(app.querySelectorAll(".service-choice"));
+			const dateSelect = document.getElementById("booking-date");
+			const slotsContainer = document.getElementById("booking-slots");
+			const statusNode = document.getElementById("booking-status");
+			const selectedServiceNode = document.getElementById("booking-selected-service");
+			const recapNode = document.getElementById("booking-recap-line");
+			const confirmationNode = document.getElementById("booking-confirmed-line");
+			const confirmationNoteNode = document.getElementById("booking-confirmation-note");
+			const form = document.getElementById("booking-form");
+			const toStep2Button = document.getElementById("to-step-2");
+			const toStep3Button = document.getElementById("to-step-3");
+			const backToStep1Button = document.getElementById("back-to-step-1");
+			const backToStep2Button = document.getElementById("back-to-step-2");
+
+			if (!(dateSelect instanceof HTMLSelectElement)) return;
+			if (!(slotsContainer instanceof HTMLElement)) return;
+			if (!(statusNode instanceof HTMLElement)) return;
+			if (!(selectedServiceNode instanceof HTMLElement)) return;
+			if (!(recapNode instanceof HTMLElement)) return;
+			if (!(confirmationNode instanceof HTMLElement)) return;
+			if (!(confirmationNoteNode instanceof HTMLElement)) return;
+			if (!(form instanceof HTMLFormElement)) return;
+			if (!(toStep2Button instanceof HTMLButtonElement)) return;
+			if (!(toStep3Button instanceof HTMLButtonElement)) return;
+			if (!(backToStep1Button instanceof HTMLButtonElement)) return;
+			if (!(backToStep2Button instanceof HTMLButtonElement)) return;
+
+			const stepPanels = Array.from(app.querySelectorAll("[data-step-panel]"));
+			const stepPills = Array.from(app.querySelectorAll("[data-pill-step]"));
+
+			let selectedServiceCode = "";
+			let selectedServiceName = "";
+			let selectedServicePrice = "";
+			let selectedDate = "";
+			let selectedSlotId = "";
+			let selectedSlotAt = "";
+
+			let availableDates = [];
+			let slotsByDate = [];
+
+			const serviceLabel = () =>
+				selectedServicePrice
+					? `${selectedServiceName} (${selectedServicePrice})`
+					: selectedServiceName;
+
+			const formatDate = (isoLikeDate) =>
+				new Intl.DateTimeFormat("fr-FR", {
+					weekday: "long",
+					day: "2-digit",
+					month: "long"
+				}).format(new Date(`${isoLikeDate}T12:00:00`));
+
+			const formatDateTime = (isoDateTime) =>
+				new Intl.DateTimeFormat("fr-FR", {
+					weekday: "short",
+					day: "2-digit",
+					month: "short",
+					hour: "2-digit",
+					minute: "2-digit"
+				}).format(new Date(isoDateTime));
+
+			const formatTime = (isoDateTime) =>
+				new Intl.DateTimeFormat("fr-FR", {
+					hour: "2-digit",
+					minute: "2-digit"
+				}).format(new Date(isoDateTime));
+
+			const goToStep = (targetStep) => {
+				stepPanels.forEach((panel) => {
+					const isActive = panel.getAttribute("data-step-panel") === String(targetStep);
+					panel.classList.toggle("is-active", isActive);
+				});
+				stepPills.forEach((pill) => {
+					const isActive = pill.getAttribute("data-pill-step") === String(targetStep);
+					pill.classList.toggle("is-active", isActive);
+				});
+			};
+
+			const setStatus = (message, type = "neutral") => {
+				statusNode.textContent = message;
+				statusNode.dataset.state = type;
+			};
+
+			const clearSlots = (message) => {
+				selectedSlotId = "";
+				selectedSlotAt = "";
+				toStep3Button.disabled = true;
+				slotsContainer.innerHTML = `<p class="slots-placeholder">${message}</p>`;
+			};
+
+			const renderDateOptions = () => {
+				dateSelect.innerHTML = `<option value="">Choisissez une date</option>`;
+				availableDates.forEach((date) => {
+					const option = document.createElement("option");
+					option.value = date;
+					option.textContent = formatDate(date);
+					dateSelect.append(option);
+				});
+			};
+
+				const renderSlots = () => {
+					const slots = slotsByDate.filter((slot) => slot.slotAt.slice(0, 10) === selectedDate);
+					if (slots.length === 0) {
+						clearSlots("Aucun créneau disponible pour cette date.");
+						return;
+					}
+
+				slotsContainer.innerHTML = "";
+				slots.forEach((slot) => {
+					const button = document.createElement("button");
+					button.type = "button";
+					button.className = "slot-pill";
+					button.textContent = formatTime(slot.slotAt);
+					button.dataset.slotId = slot.id;
+					button.addEventListener("click", () => {
+						selectedSlotId = slot.id;
+						selectedSlotAt = slot.slotAt;
+						slotsContainer
+							.querySelectorAll(".slot-pill")
+							.forEach((node) => node.classList.remove("is-selected"));
+						button.classList.add("is-selected");
+						toStep3Button.disabled = false;
+						recapNode.textContent = `${serviceLabel()} - ${formatDateTime(selectedSlotAt)}`;
+					});
+					slotsContainer.append(button);
+				});
+			};
+
+			const fetchDates = async () => {
+				const response = await fetch("/api/public/slots");
+				if (!response.ok) throw new Error("DATES_LOAD_FAILED");
+				const payload = await response.json();
+				availableDates = payload.dates ?? [];
+			};
+
+			const fetchSlotsForDate = async (date) => {
+				const response = await fetch(`/api/public/slots?date=${encodeURIComponent(date)}`);
+				if (!response.ok) throw new Error("SLOTS_LOAD_FAILED");
+				const payload = await response.json();
+				slotsByDate = payload.slots ?? [];
+			};
+
+			serviceButtons.forEach((button) => {
+				if (!(button instanceof HTMLButtonElement)) return;
+				button.addEventListener("click", () => {
+					selectedServiceCode = button.dataset.serviceCode ?? "";
+					selectedServiceName = button.dataset.serviceName ?? "";
+					selectedServicePrice = button.dataset.servicePrice ?? "";
+					serviceButtons.forEach((item) => item.classList.remove("is-selected"));
+					button.classList.add("is-selected");
+					toStep2Button.disabled = !selectedServiceCode;
+				});
+			});
+
+			toStep2Button.addEventListener("click", async () => {
+				if (!selectedServiceCode) return;
+				goToStep(2);
+				selectedServiceNode.textContent = `Prestation: ${serviceLabel()}`;
+				dateSelect.disabled = true;
+				dateSelect.innerHTML = `<option value="">Chargement...</option>`;
+				clearSlots("Chargement des créneaux...");
+				setStatus("", "neutral");
+
+				try {
+					await fetchDates();
+					renderDateOptions();
+					dateSelect.disabled = false;
+					if (availableDates.length === 0) {
+						clearSlots("Aucun créneau disponible pour le moment.");
+					}
+				} catch {
+					dateSelect.innerHTML = `<option value="">Indisponible</option>`;
+					clearSlots("Erreur de chargement des créneaux.");
+					setStatus("Impossible de charger les disponibilités.", "error");
+				}
+			});
+
+			backToStep1Button.addEventListener("click", () => {
+				goToStep(1);
+			});
+
+			dateSelect.addEventListener("change", async () => {
+				selectedDate = dateSelect.value;
+				if (!selectedDate) {
+					clearSlots("Sélectionnez une date pour voir les créneaux.");
+					return;
+				}
+
+				try {
+					clearSlots("Chargement des créneaux...");
+					await fetchSlotsForDate(selectedDate);
+					renderSlots();
+				} catch {
+					clearSlots("Erreur de chargement des créneaux.");
+					setStatus("Impossible de charger les créneaux disponibles.", "error");
+				}
+			});
+
+			toStep3Button.addEventListener("click", () => {
+				if (!selectedSlotId) return;
+				goToStep(3);
+			});
+
+			backToStep2Button.addEventListener("click", () => {
+				goToStep(2);
+			});
+
+			form.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				setStatus("", "neutral");
+
+				if (!selectedServiceCode || !selectedDate || !selectedSlotId) {
+					setStatus("Sélectionnez un service, une date et un créneau.", "error");
+					return;
+				}
+
+				const submitButton = form.querySelector(".booking-submit");
+				if (!(submitButton instanceof HTMLButtonElement)) return;
+				submitButton.disabled = true;
+				submitButton.textContent = "Validation en cours...";
+
+				const formData = new FormData(form);
+				const payload = {
+					serviceCode: selectedServiceCode,
+					slotId: selectedSlotId,
+					firstName: String(formData.get("firstName") ?? ""),
+					lastName: String(formData.get("lastName") ?? ""),
+					phone: String(formData.get("phone") ?? ""),
+					email: String(formData.get("email") ?? "")
+				};
+
+				try {
+					const response = await fetch("/api/bookings/create", {
+						method: "POST",
+						headers: { "content-type": "application/json" },
+						body: JSON.stringify(payload)
+					});
+					const result = await response.json();
+
+					if (!response.ok) {
+						const message =
+							result.error === "SLOT_NOT_AVAILABLE"
+								? "Ce créneau vient d’être réservé. Merci d’en choisir un autre."
+								: "La réservation a échoué. Merci de réessayer.";
+						setStatus(message, "error");
+						submitButton.disabled = false;
+						submitButton.textContent = "Confirmer le rendez-vous";
+						return;
+					}
+
+					confirmationNode.textContent = `${serviceLabel()} - ${formatDateTime(selectedSlotAt)}`;
+					if (result?.emailStatus?.sent) {
+						confirmationNoteNode.textContent = "Un e-mail de confirmation vient d’être envoyé.";
+						setStatus("Réservation enregistrée avec succès.", "success");
+					} else if (result?.emailStatus?.queued) {
+						confirmationNoteNode.textContent =
+							"Réservation enregistrée. L’e-mail de confirmation arrive dans quelques instants.";
+						setStatus("Réservation enregistrée avec succès.", "success");
+					} else {
+						confirmationNoteNode.textContent =
+							"Réservation enregistrée, mais l’e-mail de confirmation n’a pas pu être envoyé pour le moment.";
+						setStatus("Réservation enregistrée, mais e-mail non envoyé.", "error");
+					}
+					submitButton.disabled = false;
+					submitButton.textContent = "Confirmer le rendez-vous";
+					goToStep(4);
+				} catch {
+					setStatus("Erreur serveur. Merci de réessayer.", "error");
+					submitButton.disabled = false;
+					submitButton.textContent = "Confirmer le rendez-vous";
+				}
+			});
+
+		})();
+	</script>
+</BaseLayout>
