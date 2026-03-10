@@ -494,18 +494,18 @@ a {
 }
 
 .gallery-strip {
-	margin-top: 0.75rem;
-	padding: 1.2rem 1rem 1.3rem;
-	border: 1px solid #dfd6cc;
-	border-radius: 16px;
+	margin-top: 1rem;
+	padding: 1.35rem 1.15rem 1.45rem;
+	border: 1px solid #ddd3c8;
+	border-radius: 18px;
 	background:
-			radial-gradient(circle at 12% 0%, rgba(198, 180, 162, 0.28), transparent 42%),
-			linear-gradient(180deg, #f7f5f2 0%, #f2efeb 100%);
+			radial-gradient(circle at 12% 0%, rgba(198, 180, 162, 0.24), transparent 42%),
+			linear-gradient(180deg, #f7f5f2 0%, #f1ede8 100%);
 }
 
 .gallery-head {
 	max-width: 760px;
-	margin: 0 auto 0.9rem;
+	margin: 0 auto 1rem;
 	text-align: center;
 }
 
@@ -519,17 +519,18 @@ a {
 }
 
 .gallery-head h2 {
-	margin: 0.2rem 0 0.35rem;
+	margin: 0.24rem 0 0.4rem;
 	font-family: "Cormorant Garamond", serif;
 	font-size: clamp(2rem, 4vw, 3.2rem);
-	line-height: 0.94;
+	line-height: 0.9;
 }
 
 .gallery-head p {
 	margin: 0 auto;
-	max-width: 58ch;
+	max-width: 52ch;
 	color: var(--ink-soft);
-	font-size: 0.9rem;
+	font-size: 0.92rem;
+	line-height: 1.5;
 }
 
 .gallery-rail-wrap {
@@ -553,11 +554,14 @@ a {
 
 .gallery-rail {
 	display: flex;
-	gap: 0.52rem;
+	gap: 0.62rem;
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
+	overscroll-behavior-x: contain;
 	scroll-snap-type: x mandatory;
-	padding: 0.1rem 0.1rem 0.55rem;
+	scroll-padding-inline: 0.2rem;
+	scroll-behavior: smooth;
+	padding: 0.14rem 0.14rem 0.58rem;
 	margin: 0 -0.1rem;
 }
 
@@ -578,14 +582,15 @@ a {
 .gallery-card {
 	position: relative;
 	margin: 0;
-	flex: 0 0 clamp(180px, 22vw, 285px);
-	aspect-ratio: 4 / 5;
-	border-radius: 12px;
+	flex: 0 0 clamp(164px, 19vw, 248px);
+	aspect-ratio: 9 / 16;
+	border-radius: 14px;
 	overflow: hidden;
 	border: 1px solid #d8cec3;
 	background: #e6ded5;
-	box-shadow: 0 10px 24px rgba(37, 28, 22, 0.12);
-	scroll-snap-align: start;
+	box-shadow: 0 11px 25px rgba(36, 28, 22, 0.13);
+	scroll-snap-align: center;
+	scroll-snap-stop: always;
 	isolation: isolate;
 }
 
@@ -593,7 +598,7 @@ a {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	transition: transform 0.25s ease;
+	transition: none;
 }
 
 .gallery-card::after {
@@ -620,36 +625,37 @@ a {
 }
 
 .gallery-card-feature {
-	flex-basis: clamp(220px, 30vw, 355px);
-	aspect-ratio: 5 / 6;
+	flex-basis: clamp(188px, 23vw, 296px);
+	aspect-ratio: 9 / 16;
 }
 
-.gallery-card:hover img {
-	transform: scale(1.03);
+.gallery-card img.media-smooth {
+	opacity: 1 !important;
+	transform: none !important;
 }
 
 .work-photo-1 {
-	object-position: center 56%;
+	object-position: center center;
 }
 
 .work-photo-2 {
-	object-position: center 52%;
+	object-position: center center;
 }
 
 .work-photo-3 {
-	object-position: center 58%;
+	object-position: center center;
 }
 
 .work-photo-4 {
-	object-position: center 53%;
+	object-position: center center;
 }
 
 .work-photo-5 {
-	object-position: center 60%;
+	object-position: center center;
 }
 
 .work-photo-6 {
-	object-position: center 58%;
+	object-position: center center;
 }
 
 .price-panel {
@@ -1062,8 +1068,6 @@ a {
 }
 
 @supports (content-visibility: auto) {
-	.home-shell > section:not(.hero-panel),
-	.gallery-rail,
 	.review-carousel,
 	.site-footer {
 		content-visibility: auto;
@@ -2315,11 +2319,11 @@ textarea {
 	}
 
 	.gallery-strip {
-		padding: 0.92rem 0.65rem 1rem;
+		padding: 0.96rem 0.66rem 1.04rem;
 	}
 
 	.gallery-head {
-		margin-bottom: 0.62rem;
+		margin-bottom: 0.7rem;
 		text-align: left;
 	}
 
@@ -2329,8 +2333,8 @@ textarea {
 
 	.gallery-head p {
 		margin-inline: 0;
-		font-size: 0.8rem;
-		max-width: 38ch;
+		font-size: 0.81rem;
+		max-width: 36ch;
 	}
 
 	.gallery-scroll-hint {
@@ -2338,16 +2342,18 @@ textarea {
 	}
 
 	.gallery-rail {
-		gap: 0.4rem;
+		gap: 0.44rem;
 		padding-bottom: 0.45rem;
 	}
 
 	.gallery-card {
-		flex-basis: 58vw;
+		flex-basis: clamp(168px, 52vw, 236px);
+		margin-top: 0;
 	}
 
 	.gallery-card-feature {
-		flex-basis: 70vw;
+		flex-basis: clamp(188px, 62vw, 268px);
+		margin-top: 0;
 	}
 
 	.gallery-card figcaption {
@@ -2489,23 +2495,44 @@ textarea {
 	}
 
 	.review-carousel {
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.5rem;
-		overflow: hidden;
+		grid-template-columns: 1fr;
+		gap: 0;
+		max-width: 540px;
+		margin-inline: auto;
+		overflow: visible;
 	}
 
 	.review-card {
-		padding: 1rem 0.7rem;
-		min-height: 150px;
+		padding: 1.3rem 1.15rem;
+		min-height: 0;
 	}
 
 	.review-text {
-		font-size: clamp(1.02rem, 4.6vw, 1.18rem);
-		line-height: 1.1;
+		font-size: clamp(1.32rem, 6.2vw, 1.62rem);
+		line-height: 1.08;
+		max-height: none;
+		overflow: visible;
 	}
 
 	.review-author {
-		font-size: 0.76rem;
+		font-size: 0.9rem;
+	}
+
+	.review-slot-left,
+	.review-slot-right {
+		display: none;
+	}
+
+	.review-slot-center {
+		opacity: 1;
+		transform: none;
+		background: #f8f7f5;
+		border-color: #d9d2ca;
+	}
+
+	.review-carousel.is-switching .review-slot-center {
+		transform: none;
+		opacity: 0.78;
 	}
 
 	.wide-feature,
@@ -2711,7 +2738,7 @@ textarea {
 	}
 
 	.gallery-strip {
-		padding: 0.84rem 0.56rem 0.9rem;
+		padding: 0.86rem 0.56rem 0.92rem;
 	}
 
 	.gallery-head h2 {
@@ -2728,11 +2755,13 @@ textarea {
 	}
 
 	.gallery-card {
-		flex-basis: 64vw;
+		flex-basis: clamp(162px, 56vw, 212px);
+		margin-top: 0;
 	}
 
 	.gallery-card-feature {
-		flex-basis: 76vw;
+		flex-basis: clamp(178px, 64vw, 236px);
+		margin-top: 0;
 	}
 
 	.gallery-card figcaption {

@@ -258,31 +258,30 @@ const websiteSchema = {
 					}
 				})();
 			</script>
-			<script is:inline>
-				(() => {
-					const run = () => {
-						const selector = [
-							".content-block",
-							".card",
-							".contact-card",
-							".service-tile",
-							".wide-feature",
-							".gallery-card",
-							".price-tile",
-							".review-card",
-							".bottom-cta",
-							".booking-head",
-							".booking-steps",
-							".booking-step-panel",
-							".booking-addons",
-							".service-choice",
-							".slot-pill",
-							".admin-header-card",
-							".admin-kpi-card",
-							".admin-panel",
-							".admin-item",
-							".legal-card"
-						].join(",");
+				<script is:inline>
+					(() => {
+						const run = () => {
+							const selector = [
+								".content-block",
+								".card",
+								".contact-card",
+								".service-tile",
+								".wide-feature",
+								".price-tile",
+								".review-card",
+								".bottom-cta",
+								".booking-head",
+								".booking-steps",
+								".booking-step-panel",
+								".booking-addons",
+								".service-choice",
+								".slot-pill",
+								".admin-header-card",
+								".admin-kpi-card",
+								".admin-panel",
+								".admin-item",
+								".legal-card"
+							].join(",");
 
 						const hasReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 						let revealIndex = 0;
