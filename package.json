@@ -10,7 +10,7 @@
     "db:check": "node --env-file=.env scripts/db-check.mjs"
   },
   "dependencies": {
-    "@astrojs/node": "^9.5.4",
+    "@astrojs/vercel": "^8.2.0",
     "@supabase/supabase-js": "^2.98.0",
     "astro": "^5.17.1",
     "nodemailer": "^8.0.1"
