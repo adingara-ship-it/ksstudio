@@ -45,6 +45,37 @@ function parseSmtpPort(rawValue: string) {
 	return parsed;
 }
 
+function getConfiguredFromAddress() {
+	const from = getFirstEnvValue([
+		"SMTP_FROM",
+		"MAIL_FROM",
+		"EMAIL_FROM",
+		"SMTP_USER",
+		"SMTP_USERNAME"
+	]);
+	if (!from || isPlaceholderValue(from)) return "";
+	return from;
+}
+
+function getBookingOwnerEmail() {
+	const ownerEmail = getFirstEnvValue(["BOOKING_OWNER_EMAIL", "CONTACT_OWNER_EMAIL", "ADMIN_EMAIL"]);
+	if (!ownerEmail || isPlaceholderValue(ownerEmail)) return "";
+	return ownerEmail;
+}
+
+async function sendMailSafe(transporter: nodemailer.Transporter, options: nodemailer.SendMailOptions) {
+	try {
+		await transporter.sendMail(options);
+		return true;
+	} catch (error) {
+		console.error("SMTP_SEND_FAILED", {
+			reason: error instanceof Error ? error.message : "UNKNOWN",
+			to: String(options.to ?? "")
+		});
+		return false;
+	}
+}
+
 function formatBookingDate(iso: string) {
 	const timezone = getOptionalEnv("BOOKING_TIMEZONE") || "Europe/Brussels";
 	return new Intl.DateTimeFormat("fr-FR", {
@@ -243,12 +274,10 @@ export async function sendBookingConfirmationEmails(payload: BookingMailPayload)
 	const transporter = getTransporter();
 	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 
-	const from = getFirstEnvValue(["SMTP_FROM", "MAIL_FROM", "EMAIL_FROM"]);
-	const ownerEmail = getFirstEnvValue(["BOOKING_OWNER_EMAIL"]);
-	if (!from || !ownerEmail) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
-	if (isPlaceholderValue(from) || isPlaceholderValue(ownerEmail)) {
-		return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
-	}
+	const from = getConfiguredFromAddress();
+	if (!from) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+
+	const ownerEmail = getBookingOwnerEmail();
 
 	const siteUrl = getSiteUrl();
 	const normalizedSiteUrl = siteUrl.replace(/\/$/, "");
@@ -314,36 +343,41 @@ Date: ${formattedDate}`;
 		}
 	);
 
-	await Promise.all([
-		transporter.sendMail({
-			from,
-			to: payload.email,
-			subject: clientSubject,
-			text: clientText,
-			html: clientHtml
-		}),
-		transporter.sendMail({
-			from,
-			to: ownerEmail,
-			subject: ownerSubject,
-			text: ownerText,
-			html: ownerHtml
-		})
-	]);
+	const clientSent = await sendMailSafe(transporter, {
+		from,
+		to: payload.email,
+		subject: clientSubject,
+		text: clientText,
+		html: clientHtml
+	});
 
-	return { sent: true };
+	if (!clientSent) {
+		return { sent: false, reason: "CLIENT_MAIL_FAILED" };
+	}
+
+	if (!ownerEmail) {
+		return { sent: true, reason: "OWNER_EMAIL_MISSING" };
+	}
+
+	const ownerSent = await sendMailSafe(transporter, {
+		from,
+		to: ownerEmail,
+		subject: ownerSubject,
+		text: ownerText,
+		html: ownerHtml
+	});
+
+	return ownerSent ? { sent: true } : { sent: true, reason: "OWNER_MAIL_FAILED" };
 }
 
 export async function sendBookingCancellationEmails(payload: BookingMailPayload) {
 	const transporter = getTransporter();
 	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 
-	const from = getFirstEnvValue(["SMTP_FROM", "MAIL_FROM", "EMAIL_FROM"]);
-	const ownerEmail = getFirstEnvValue(["BOOKING_OWNER_EMAIL"]);
-	if (!from || !ownerEmail) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
-	if (isPlaceholderValue(from) || isPlaceholderValue(ownerEmail)) {
-		return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
-	}
+	const from = getConfiguredFromAddress();
+	if (!from) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+
+	const ownerEmail = getBookingOwnerEmail();
 
 	const siteUrl = getSiteUrl();
 	const normalizedSiteUrl = siteUrl.replace(/\/$/, "");
@@ -408,31 +442,38 @@ Date initiale: ${formattedDate}`;
 		}
 	);
 
-	await Promise.all([
-		transporter.sendMail({
-			from,
-			to: payload.email,
-			subject: clientSubject,
-			text: clientText,
-			html: clientHtml
-		}),
-		transporter.sendMail({
-			from,
-			to: ownerEmail,
-			subject: ownerSubject,
-			text: ownerText,
-			html: ownerHtml
-		})
-	]);
+	const clientSent = await sendMailSafe(transporter, {
+		from,
+		to: payload.email,
+		subject: clientSubject,
+		text: clientText,
+		html: clientHtml
+	});
 
-	return { sent: true };
+	if (!clientSent) {
+		return { sent: false, reason: "CLIENT_MAIL_FAILED" };
+	}
+
+	if (!ownerEmail) {
+		return { sent: true, reason: "OWNER_EMAIL_MISSING" };
+	}
+
+	const ownerSent = await sendMailSafe(transporter, {
+		from,
+		to: ownerEmail,
+		subject: ownerSubject,
+		text: ownerText,
+		html: ownerHtml
+	});
+
+	return ownerSent ? { sent: true } : { sent: true, reason: "OWNER_MAIL_FAILED" };
 }
 
 export async function sendContactRequestEmail(payload: ContactMailPayload) {
 	const transporter = getTransporter();
 	if (!transporter) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 
-	const from = getFirstEnvValue(["SMTP_FROM", "MAIL_FROM", "EMAIL_FROM"]);
+	const from = getConfiguredFromAddress();
 	const ownerEmail = getFirstEnvValue(["CONTACT_OWNER_EMAIL", "BOOKING_OWNER_EMAIL"]);
 	if (!from || !ownerEmail) return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
 	if (isPlaceholderValue(from) || isPlaceholderValue(ownerEmail)) {
@@ -471,7 +512,7 @@ ${normalizedMessage}`;
 		}
 	);
 
-	await transporter.sendMail({
+	const ownerSent = await sendMailSafe(transporter, {
 		from,
 		to: ownerEmail,
 		replyTo: payload.email,
@@ -480,7 +521,7 @@ ${normalizedMessage}`;
 		html: ownerHtml
 	});
 
-	return { sent: true };
+	return ownerSent ? { sent: true } : { sent: false, reason: "OWNER_MAIL_FAILED" };
 }
 
 export function isEmailServiceConfigured() {
