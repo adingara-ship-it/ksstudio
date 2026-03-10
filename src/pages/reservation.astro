@@ -424,8 +424,17 @@ import { SERVICE_OPTIONS } from "../lib/services";
 						confirmationNoteNode.textContent = "Un e-mail de confirmation vient d’être envoyé.";
 						setStatus("Réservation enregistrée avec succès.", "success");
 					} else {
+						const reason = String(result?.emailStatus?.reason ?? "");
+						if (reason === "SMTP_NOT_CONFIGURED") {
+							confirmationNoteNode.textContent =
+								"Réservation enregistrée, mais la configuration e-mail du serveur est incomplète.";
+						} else if (reason === "CLIENT_MAIL_FAILED" || reason === "MAIL_SEND_FAILED") {
+							confirmationNoteNode.textContent =
+								"Réservation enregistrée, mais le serveur e-mail a refusé l'envoi.";
+						} else {
 						confirmationNoteNode.textContent =
 							"Réservation enregistrée, mais l’e-mail de confirmation n’a pas pu être envoyé pour le moment.";
+						}
 						setStatus("Réservation enregistrée, mais e-mail non envoyé.", "error");
 					}
 					submitButton.disabled = false;

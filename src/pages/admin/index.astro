@@ -618,10 +618,29 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				const response = await fetch(`/api/admin/availability/${slotId}`, {
 					method: "DELETE"
 				});
+				const result = await response.json().catch(() => ({}));
 				if (!response.ok) {
+					if (result?.error === "UNAUTHORIZED") {
+						setStatus(availabilityStatus, "Session expirée. Reconnectez-vous.", "error");
+						window.location.href = "/admin/login";
+						return;
+					}
+					if (result?.error === "ORIGIN_FORBIDDEN") {
+						setStatus(availabilityStatus, "Session invalide. Rechargez la page.", "error");
+						return;
+					}
+					if (result?.error === "SLOT_HAS_CONFIRMED_BOOKING") {
+						setStatus(
+							availabilityStatus,
+							"Impossible de supprimer: ce créneau est lié à un rendez-vous confirmé.",
+							"error"
+						);
+						return;
+					}
+					const code = String(result?.error ?? "UNKNOWN");
 					setStatus(
 						availabilityStatus,
-						"Impossible de supprimer ce créneau (peut-être déjà réservé).",
+						`Impossible de supprimer ce créneau (${code}).`,
 						"error"
 					);
 					return;
@@ -645,15 +664,76 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				});
 				const result = await response.json().catch(() => ({}));
 				if (!response.ok) {
-					setStatus(bookingStatus, "Échec de l'annulation.", "error");
+					if (result?.error === "UNAUTHORIZED") {
+						setStatus(bookingStatus, "Session expirée. Reconnectez-vous.", "error");
+						window.location.href = "/admin/login";
+						return;
+					}
+					if (result?.error === "ORIGIN_FORBIDDEN") {
+						setStatus(
+							bookingStatus,
+							"Session invalide. Rechargez la page puis réessayez.",
+							"error"
+						);
+						return;
+					}
+					if (result?.error === "BOOKING_NOT_FOUND") {
+						setStatus(bookingStatus, "Rendez-vous introuvable.", "error");
+						await Promise.all([loadBookings(), loadAvailability()]);
+						return;
+					}
+					const code = String(result?.error ?? "UNKNOWN");
+					setStatus(bookingStatus, `Échec de l'annulation (${code}).`, "error");
 					return;
 				}
 
-				if (result?.emailStatus?.sent) {
-					setStatus(bookingStatus, "Rendez-vous annulé et e-mail envoyé.", "success");
-				} else {
-					setStatus(bookingStatus, "Rendez-vous annulé (e-mail non envoyé).", "error");
+				const slotStatus = result?.slotStatus;
+				let slotNote = "";
+				let hasSlotIssue = false;
+				if (slotStatus?.reopened === false) {
+					hasSlotIssue = true;
+					const slotReason = String(slotStatus?.reason ?? "");
+					if (slotReason === "SLOT_HAS_CONFIRMED_BOOKING") {
+						slotNote =
+							" Créneau non réouvert: un autre rendez-vous confirmé existe déjà sur cette heure.";
+					} else if (slotReason === "SLOT_AT_MISSING") {
+						slotNote = " Créneau non réouvert: date/heure du rendez-vous introuvable.";
+					} else {
+						slotNote = " Créneau non réouvert automatiquement.";
+					}
+				} else if (slotStatus?.reason === "REOPENED_WITH_SLOT_AT_FALLBACK") {
+					slotNote = " Créneau réouvert automatiquement.";
 				}
+
+				if (result?.alreadyCancelled) {
+					setStatus(
+						bookingStatus,
+						`Rendez-vous déjà annulé.${slotNote || " Créneau vérifié."}`,
+						hasSlotIssue ? "error" : "success"
+					);
+					await Promise.all([loadBookings(), loadAvailability()]);
+					return;
+				}
+
+				const emailSent = Boolean(result?.emailStatus?.sent);
+				let emailNote = emailSent ? " E-mail envoyé." : " E-mail non envoyé.";
+				if (!emailSent) {
+					const emailReason = String(result?.emailStatus?.reason ?? "");
+					if (emailReason === "SMTP_NOT_CONFIGURED") {
+						emailNote = " E-mail non envoyé: configuration SMTP incomplète.";
+					} else if (
+						emailReason === "CLIENT_MAIL_FAILED" ||
+						emailReason === "MAIL_SEND_FAILED"
+					) {
+						emailNote = " E-mail non envoyé: serveur SMTP indisponible/refus.";
+					}
+				}
+
+				setStatus(
+					bookingStatus,
+					`Rendez-vous annulé.${slotNote}${emailNote}`,
+					emailSent && !hasSlotIssue ? "success" : "error"
+				);
 				await Promise.all([loadBookings(), loadAvailability()]);
 			});
 
