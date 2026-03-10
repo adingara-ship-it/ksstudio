@@ -2235,7 +2235,11 @@ textarea {
 
 	.hero-panel,
 	.hero-content {
-		min-height: 380px;
+		min-height: 0;
+	}
+
+	.hero-panel {
+		aspect-ratio: 3 / 2;
 	}
 
 	.hero-bg {
@@ -2253,7 +2257,7 @@ textarea {
 	}
 
 	.hero-center h1 {
-		font-size: clamp(2.12rem, 10.4vw, 3.1rem);
+		font-size: clamp(1.92rem, 8.8vw, 2.58rem);
 		line-height: 0.89;
 		max-width: none;
 		letter-spacing: -0.015em;
@@ -2261,7 +2265,7 @@ textarea {
 
 	.hero-center p {
 		max-width: 31ch;
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 		line-height: 1.28;
 	}
 
@@ -2612,7 +2616,7 @@ textarea {
 
 	.hero-panel,
 	.hero-content {
-		min-height: 350px;
+		min-height: 0;
 	}
 
 	.hero-bg {
@@ -2624,13 +2628,13 @@ textarea {
 	}
 
 	.hero-center h1 {
-		font-size: clamp(1.96rem, 10vw, 2.74rem);
+		font-size: clamp(1.72rem, 8.6vw, 2.26rem);
 		line-height: 0.9;
 		max-width: none;
 	}
 
 	.hero-center p {
-		font-size: 0.79rem;
+		font-size: 0.86rem;
 		max-width: 30ch;
 		line-height: 1.26;
 	}
@@ -2787,7 +2791,7 @@ textarea {
 
 @media (max-width: 380px) {
 	.hero-center h1 {
-		font-size: clamp(1.72rem, 9.4vw, 2.28rem);
+		font-size: clamp(1.56rem, 8.4vw, 2rem);
 	}
 
 	.hero-title-line,
