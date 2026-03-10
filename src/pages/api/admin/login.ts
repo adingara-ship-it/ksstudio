@@ -22,9 +22,20 @@ function safeTextEqual(left: string, right: string) {
 export const POST: APIRoute = async (context) => {
 	const { request, cookies, url, clientAddress } = context;
 	const ipAddress = getClientIp(request, clientAddress);
+	const originHeader = request.headers.get("origin");
+	const refererHeader = request.headers.get("referer");
+	const forwardedHost = request.headers.get("x-forwarded-host");
+	const hostHeader = request.headers.get("host");
 
 	if (!isSameOriginRequest(request, url.origin)) {
 		console.warn("[admin-auth] login rejected: invalid origin", { ipAddress });
+		console.warn("[admin-auth] login rejected: origin details", {
+			expectedOrigin: url.origin,
+			originHeader,
+			refererHeader,
+			forwardedHost,
+			hostHeader
+		});
 		return json(403, { error: "ORIGIN_FORBIDDEN" });
 	}
 

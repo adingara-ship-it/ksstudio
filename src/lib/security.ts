@@ -149,16 +149,116 @@ export function maskEmailAddress(email: string) {
 	return `${local.slice(0, 2)}***@${domain}`;
 }
 
-export function isSameOriginRequest(request: Request, expectedOrigin: string) {
-	const origin = request.headers.get("origin");
-	if (origin) return origin === expectedOrigin;
+function normalizeEnvValue(value: string) {
+	const trimmed = value.trim();
+	if (
+		(trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+		(trimmed.startsWith("'") && trimmed.endsWith("'"))
+	) {
+		return trimmed.slice(1, -1).trim();
+	}
+	return trimmed;
+}
 
-	const referer = request.headers.get("referer");
-	if (!referer) return true;
+function normalizeOrigin(value: string) {
+	const raw = value.trim();
+	if (!raw) return "";
+	try {
+		return new URL(raw).origin;
+	} catch {
+		return "";
+	}
+}
+
+function normalizeComparableOrigin(value: string) {
+	const origin = normalizeOrigin(value);
+	if (!origin) return "";
 
 	try {
-		return new URL(referer).origin === expectedOrigin;
+		const parsed = new URL(origin);
+		const hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
+		const port = parsed.port ? `:${parsed.port}` : "";
+		return `${parsed.protocol}//${hostname}${port}`;
 	} catch {
-		return false;
+		return "";
 	}
+}
+
+function originsMatch(left: string, right: string) {
+	const leftComparable = normalizeComparableOrigin(left);
+	const rightComparable = normalizeComparableOrigin(right);
+	if (!leftComparable || !rightComparable) return false;
+	return leftComparable === rightComparable;
+}
+
+function addOriginIfValid(target: Set<string>, candidate: string) {
+	const normalized = normalizeOrigin(candidate);
+	if (!normalized) return;
+	target.add(normalized);
+}
+
+function buildAllowedOrigins(request: Request, expectedOrigin: string) {
+	const allowed = new Set<string>();
+	addOriginIfValid(allowed, expectedOrigin);
+
+	const siteEnvNames = ["SITE_URL", "PUBLIC_SITE_URL", "APP_URL"];
+	for (const envName of siteEnvNames) {
+		const raw = import.meta.env[envName];
+		if (typeof raw !== "string") continue;
+		const normalized = normalizeEnvValue(raw);
+		addOriginIfValid(allowed, normalized);
+	}
+
+	const forwardedHostRaw = request.headers.get("x-forwarded-host") ?? "";
+	const forwardedProtoRaw = request.headers.get("x-forwarded-proto") ?? "";
+	const hostRaw = request.headers.get("host") ?? "";
+
+	const forwardedHost = forwardedHostRaw
+		.split(",")
+		.map((value) => value.trim())
+		.find(Boolean);
+	const forwardedProto = forwardedProtoRaw
+		.split(",")
+		.map((value) => value.trim())
+		.find(Boolean);
+	const host = hostRaw
+		.split(",")
+		.map((value) => value.trim())
+		.find(Boolean);
+
+	const expectedProtocol = normalizeOrigin(expectedOrigin)
+		? new URL(expectedOrigin).protocol.replace(":", "")
+		: "https";
+	const protocol = forwardedProto || expectedProtocol || "https";
+
+	if (forwardedHost) addOriginIfValid(allowed, `${protocol}://${forwardedHost}`);
+	if (host) addOriginIfValid(allowed, `${protocol}://${host}`);
+
+	return allowed;
+}
+
+export function isSameOriginRequest(request: Request, expectedOrigin: string) {
+	const allowedOrigins = buildAllowedOrigins(request, expectedOrigin);
+	const origin = request.headers.get("origin")?.trim() ?? "";
+	const referer = request.headers.get("referer")?.trim() ?? "";
+
+	if (origin && origin.toLowerCase() !== "null") {
+		for (const allowed of allowedOrigins) {
+			if (originsMatch(origin, allowed)) return true;
+		}
+	}
+
+	if (referer) {
+		try {
+			const refererOrigin = new URL(referer).origin;
+			for (const allowed of allowedOrigins) {
+				if (originsMatch(refererOrigin, allowed)) return true;
+			}
+		} catch {
+			return false;
+		}
+	}
+
+	if (!origin && !referer) return true;
+	return false;
 }
