@@ -438,10 +438,14 @@ import { SERVICE_OPTIONS } from "../lib/services";
 							confirmationNoteNode.textContent =
 								"Réservation enregistrée, mais le serveur e-mail a refusé l'envoi.";
 						} else {
-						confirmationNoteNode.textContent =
-							"Réservation enregistrée, mais l’e-mail de confirmation n’a pas pu être envoyé pour le moment.";
+							confirmationNoteNode.textContent =
+								"Réservation enregistrée, mais l’e-mail de confirmation n’a pas pu être envoyé pour le moment.";
 						}
-						setStatus("Réservation enregistrée, mais e-mail non envoyé.", "error");
+						const statusReason = reason || "MAIL_SEND_FAILED";
+						setStatus(
+							`Réservation enregistrée, mais e-mail non envoyé (${statusReason}).`,
+							"error"
+						);
 					}
 					submitButton.disabled = false;
 					submitButton.textContent = "Confirmer le rendez-vous";
