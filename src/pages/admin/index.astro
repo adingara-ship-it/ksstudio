@@ -738,13 +738,25 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				let emailNote = emailSent ? " E-mail envoyé." : " E-mail non envoyé.";
 				if (!emailSent) {
 					const emailReason = String(result?.emailStatus?.reason ?? "");
+					const emailDetails = String(result?.emailStatus?.details ?? "").trim();
 					if (emailReason === "SMTP_NOT_CONFIGURED") {
 						emailNote = " E-mail non envoyé: configuration SMTP incomplète.";
+					} else if (emailReason === "SMTP_AUTH_FAILED") {
+						emailNote = " E-mail non envoyé: authentification SMTP refusée.";
+					} else if (emailReason === "SMTP_CONNECTION_FAILED") {
+						emailNote = " E-mail non envoyé: connexion SMTP impossible.";
 					} else if (
 						emailReason === "CLIENT_MAIL_FAILED" ||
-						emailReason === "MAIL_SEND_FAILED"
+						emailReason === "MAIL_SEND_FAILED" ||
+						emailReason === "SMTP_SEND_FAILED"
 					) {
 						emailNote = " E-mail non envoyé: serveur SMTP indisponible/refus.";
+					}
+					if (emailDetails) {
+						const shortDetails = emailDetails.length > 160
+							? `${emailDetails.slice(0, 160)}...`
+							: emailDetails;
+						emailNote += ` (${shortDetails})`;
 					}
 				}
 

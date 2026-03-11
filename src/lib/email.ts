@@ -54,7 +54,16 @@ function mapSmtpError(error: unknown): MailResult {
 }
 
 function getOptionalEnv(name: string) {
-	return import.meta.env[name] || "";
+	const raw = import.meta.env[name];
+	if (typeof raw !== "string") return "";
+	const trimmed = raw.trim();
+	if (
+		(trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+		(trimmed.startsWith("'") && trimmed.endsWith("'"))
+	) {
+		return trimmed.slice(1, -1).trim();
+	}
+	return trimmed;
 }
 
 function getFirstEnvValue(names: string[]) {
