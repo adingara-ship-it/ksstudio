@@ -21,6 +21,8 @@ const LOGIN_MAX_ATTEMPTS = parseIntEnv("ADMIN_LOGIN_MAX_ATTEMPTS", 5, 1, 30);
 const LOGIN_WINDOW_MS = parseIntEnv("ADMIN_LOGIN_WINDOW_MS", 15 * 60 * 1000, 60_000, 24 * 60 * 60 * 1000);
 const LOGIN_BLOCK_MS = parseIntEnv("ADMIN_LOGIN_BLOCK_MS", 15 * 60 * 1000, 60_000, 24 * 60 * 60 * 1000);
 const PRUNE_INTERVAL_MS = 60_000;
+const ADMIN_REQUEST_HEADER = "x-ks-admin-request";
+const ADMIN_REQUEST_HEADER_VALUE = "1";
 
 const loginRateBuckets = new Map<string, LoginRateBucket>();
 let lastPruneAt = 0;
@@ -261,4 +263,12 @@ export function isSameOriginRequest(request: Request, expectedOrigin: string) {
 
 	if (!origin && !referer) return true;
 	return false;
+}
+
+export function hasAdminMutationHeader(request: Request) {
+	return request.headers.get(ADMIN_REQUEST_HEADER)?.trim() === ADMIN_REQUEST_HEADER_VALUE;
+}
+
+export function isTrustedAdminMutationRequest(request: Request, expectedOrigin: string) {
+	return hasAdminMutationHeader(request) && isSameOriginRequest(request, expectedOrigin);
 }

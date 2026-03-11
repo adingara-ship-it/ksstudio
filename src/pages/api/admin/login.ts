@@ -6,7 +6,7 @@ import {
 	clearAdminLoginFailures,
 	getAdminLoginRateLimit,
 	getClientIp,
-	isSameOriginRequest,
+	isTrustedAdminMutationRequest,
 	maskEmailAddress,
 	registerAdminLoginFailure
 } from "../../../lib/security";
@@ -27,7 +27,7 @@ export const POST: APIRoute = async (context) => {
 	const forwardedHost = request.headers.get("x-forwarded-host");
 	const hostHeader = request.headers.get("host");
 
-	if (!isSameOriginRequest(request, url.origin)) {
+	if (!isTrustedAdminMutationRequest(request, url.origin)) {
 		console.warn("[admin-auth] login rejected: invalid origin", { ipAddress });
 		console.warn("[admin-auth] login rejected: origin details", {
 			expectedOrigin: url.origin,

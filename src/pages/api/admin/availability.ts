@@ -9,7 +9,7 @@ import {
 	ensureDefaultAvailability,
 	isMissingBlockedSlotsTableError
 } from "../../../lib/defaultAvailability";
-import { isSameOriginRequest } from "../../../lib/security";
+import { isTrustedAdminMutationRequest } from "../../../lib/security";
 import { supabaseAdmin } from "../../../lib/supabase";
 
 export const prerender = false;
@@ -54,7 +54,7 @@ function timeToMinutes(time: string) {
 
 export const POST: APIRoute = async (context) => {
 	if (!ensureAdmin(context)) return json(401, { error: "UNAUTHORIZED" });
-	if (!isSameOriginRequest(context.request, context.url.origin)) {
+	if (!isTrustedAdminMutationRequest(context.request, context.url.origin)) {
 		return json(403, { error: "ORIGIN_FORBIDDEN" });
 	}
 

@@ -66,6 +66,10 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				statusNode.dataset.state = state;
 			};
 
+			const adminMutationHeaders = {
+				"x-ks-admin-request": "1"
+			};
+
 			const loadAnalytics = async () => {
 				const response = await fetch("/api/admin/analytics/realtime");
 				const payload = await response.json().catch(() => ({}));
@@ -82,7 +86,10 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 			};
 
 			logoutButton.addEventListener("click", async () => {
-				await fetch("/api/admin/logout", { method: "POST" });
+				await fetch("/api/admin/logout", {
+					method: "POST",
+					headers: adminMutationHeaders
+				});
 				window.location.href = "/admin/login";
 			});
 

@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { ensureAdmin } from "../../../lib/adminGuard";
 import { json } from "../../../lib/api";
-import { isSameOriginRequest } from "../../../lib/security";
+import { isTrustedAdminMutationRequest } from "../../../lib/security";
 import { supabaseAdmin } from "../../../lib/supabase";
 
 export const prerender = false;
@@ -56,7 +56,7 @@ export const GET: APIRoute = async (context) => {
 
 export const DELETE: APIRoute = async (context) => {
 	if (!ensureAdmin(context)) return json(401, { error: "UNAUTHORIZED" });
-	if (!isSameOriginRequest(context.request, context.url.origin)) {
+	if (!isTrustedAdminMutationRequest(context.request, context.url.origin)) {
 		return json(403, { error: "ORIGIN_FORBIDDEN" });
 	}
 

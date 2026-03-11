@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { ensureAdmin } from "../../../../../lib/adminGuard";
 import { json } from "../../../../../lib/api";
 import { sendBookingCancellationEmails } from "../../../../../lib/email";
-import { isSameOriginRequest } from "../../../../../lib/security";
+import { isTrustedAdminMutationRequest } from "../../../../../lib/security";
 import { supabaseAdmin } from "../../../../../lib/supabase";
 
 export const prerender = false;
@@ -96,7 +96,7 @@ async function reopenSlotAfterCancellation({
 export const POST: APIRoute = async (context) => {
 	try {
 		if (!ensureAdmin(context)) return json(401, { error: "UNAUTHORIZED" });
-		if (!isSameOriginRequest(context.request, context.url.origin)) {
+		if (!isTrustedAdminMutationRequest(context.request, context.url.origin)) {
 			return json(403, { error: "ORIGIN_FORBIDDEN" });
 		}
 

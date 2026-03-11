@@ -89,6 +89,10 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				trashStatus.dataset.state = state;
 			};
 
+			const adminMutationHeaders = {
+				"x-ks-admin-request": "1"
+			};
+
 			const loadTrash = async () => {
 				const response = await fetch("/api/admin/bookings");
 				if (!response.ok) throw new Error("Impossible de charger la corbeille.");
@@ -140,7 +144,10 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 			};
 
 			logoutButton.addEventListener("click", async () => {
-				await fetch("/api/admin/logout", { method: "POST" });
+				await fetch("/api/admin/logout", {
+					method: "POST",
+					headers: adminMutationHeaders
+				});
 				window.location.href = "/admin/login";
 			});
 
@@ -160,7 +167,8 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				setStatus("Vidage de la corbeille en cours...", "neutral");
 
 				const response = await fetch("/api/admin/bookings?scope=cancelled", {
-					method: "DELETE"
+					method: "DELETE",
+					headers: adminMutationHeaders
 				});
 				const result = await response.json().catch(() => ({}));
 

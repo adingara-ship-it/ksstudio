@@ -56,12 +56,15 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 					password: String(formData.get("password") ?? "")
 				};
 
-				try {
-					const response = await fetch("/api/admin/login", {
-						method: "POST",
-						headers: { "content-type": "application/json" },
-						body: JSON.stringify(payload)
-					});
+					try {
+						const response = await fetch("/api/admin/login", {
+							method: "POST",
+							headers: {
+								"content-type": "application/json",
+								"x-ks-admin-request": "1"
+							},
+							body: JSON.stringify(payload)
+						});
 
 					if (!response.ok) {
 						const result = await response.json().catch(() => ({}));

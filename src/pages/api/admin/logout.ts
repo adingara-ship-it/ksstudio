@@ -1,12 +1,12 @@
 import type { APIRoute } from "astro";
 import { clearAdminSession } from "../../../lib/adminAuth";
 import { json } from "../../../lib/api";
-import { isSameOriginRequest } from "../../../lib/security";
+import { isTrustedAdminMutationRequest } from "../../../lib/security";
 
 export const prerender = false;
 
 export const POST: APIRoute = async (context) => {
-	if (!isSameOriginRequest(context.request, context.url.origin)) {
+	if (!isTrustedAdminMutationRequest(context.request, context.url.origin)) {
 		return json(403, { error: "ORIGIN_FORBIDDEN" });
 	}
 
