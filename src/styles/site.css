@@ -90,12 +90,23 @@ a {
 }
 
 .site-header {
-	position: sticky;
-	top: 0;
-	z-index: 60;
+	position: fixed;
+	top: 10px;
+	left: 0;
+	right: 0;
+	z-index: 80;
 	padding: 0;
 	background: transparent;
 	backdrop-filter: none;
+	pointer-events: none;
+	transition:
+		transform 0.28s var(--ease-premium),
+		opacity 0.24s ease;
+}
+
+.site-header.is-hidden {
+	transform: translate3d(0, -130%, 0);
+	opacity: 0.9;
 }
 
 .nav-wrap {
@@ -112,14 +123,17 @@ a {
 	box-shadow: 0 8px 24px rgba(24, 18, 14, 0.22);
 	backdrop-filter: blur(10px) saturate(125%);
 	-webkit-backdrop-filter: blur(10px) saturate(125%);
+	pointer-events: auto;
+	transition:
+		background 0.22s ease,
+		box-shadow 0.22s ease,
+		border-color 0.22s ease;
 }
 
-.route-home .site-header {
-	position: fixed;
-	top: 10px;
-	left: 0;
-	right: 0;
-	z-index: 80;
+.site-header.is-scrolled .nav-wrap {
+	background: rgba(25, 19, 15, 0.9);
+	border-color: rgba(255, 255, 255, 0.16);
+	box-shadow: 0 12px 28px rgba(14, 10, 8, 0.34);
 }
 
 .route-home .site-header .nav-wrap {
@@ -128,6 +142,10 @@ a {
 	box-shadow: 0 10px 28px rgba(16, 12, 9, 0.3);
 	backdrop-filter: blur(14px) saturate(132%);
 	-webkit-backdrop-filter: blur(14px) saturate(132%);
+}
+
+.with-header.route-inner main {
+	padding-top: 5.8rem;
 }
 
 .btn {
@@ -2171,19 +2189,54 @@ textarea {
 		width: 95%;
 	}
 
+	.with-header.route-inner main {
+		padding-top: 4.9rem;
+	}
+
+	.section {
+		padding: 3rem 0;
+	}
+
+	.content-block {
+		padding: 1.2rem;
+		border-radius: 12px;
+	}
+
+	.section-title {
+		font-size: clamp(1.95rem, 9vw, 2.4rem);
+		line-height: 1;
+		margin-bottom: 0.72rem;
+	}
+
+	.section-intro {
+		font-size: 0.92rem;
+		line-height: 1.48;
+		margin-bottom: 0.95rem;
+	}
+
+	.card {
+		padding: 1.05rem;
+	}
+
+	.card h3 {
+		font-size: 1.5rem;
+	}
+
+	.card p {
+		font-size: 0.86rem;
+		line-height: 1.45;
+	}
+
 	.route-home .home-shell {
 		padding-top: 5rem;
 	}
 
-	.route-home .site-header {
-		position: fixed;
+	.site-header {
 		top: 8px;
-		left: 0;
-		right: 0;
 		padding-top: 0;
 	}
 
-	.route-home .site-header .nav-wrap {
+	.site-header .nav-wrap {
 		margin-bottom: 0;
 	}
 
@@ -2494,6 +2547,26 @@ textarea {
 		font-size: 16px;
 	}
 
+	.bottom-cta {
+		padding: 2.2rem 0.45rem 0;
+	}
+
+	.bottom-cta h2 {
+		font-size: clamp(1.95rem, 8.8vw, 2.55rem);
+		line-height: 0.97;
+	}
+
+	.bottom-cta p {
+		margin: 0.72rem auto 1rem;
+		max-width: 34ch;
+		font-size: 0.9rem;
+	}
+
+	.bottom-cta .btn {
+		width: min(320px, 100%);
+		min-height: 46px;
+	}
+
 	.review-carousel {
 		grid-template-columns: 1fr;
 		gap: 0;
@@ -2651,6 +2724,18 @@ textarea {
 @media (max-width: 520px) {
 	.home-shell {
 		width: 96%;
+	}
+
+	.with-header.route-inner main {
+		padding-top: 4.65rem;
+	}
+
+	.section {
+		padding: 2.5rem 0;
+	}
+
+	.content-block {
+		padding: 1rem;
 	}
 
 	.route-home .home-shell {

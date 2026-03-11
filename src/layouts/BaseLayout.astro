@@ -28,6 +28,10 @@ const currentYear = new Date().getFullYear();
 const robotsContent = noindex || isAdminPath ? "noindex, nofollow" : "index, follow, max-image-preview:large";
 const canonicalUrl = new URL(path, Astro.url.origin).toString();
 const ogImageUrl = new URL(image, Astro.url.origin).toString();
+const bodyClasses = [
+	isHome ? "route-home" : "route-inner",
+	showHeader ? "with-header" : "without-header"
+].join(" ");
 const googleFontsHref =
 	"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;600;700&display=swap";
 const websiteSchema = {
@@ -112,7 +116,7 @@ const websiteSchema = {
 			}
 			<title>{title}</title>
 		</head>
-		<body class={isHome ? "route-home" : undefined}>
+		<body class={bodyClasses}>
 			{
 				showHeader && (
 						<header class="site-header">
@@ -357,23 +361,58 @@ const websiteSchema = {
 			</script>
 			<script is:inline>
 				(() => {
+					const siteHeader = document.querySelector(".site-header");
 					const navToggle = document.querySelector("[data-nav-toggle]");
 					const navMenu = document.querySelector("[data-nav-menu]");
-				if (!(navToggle instanceof HTMLButtonElement) || !(navMenu instanceof HTMLElement)) return;
+				if (
+					!(siteHeader instanceof HTMLElement) ||
+					!(navToggle instanceof HTMLButtonElement) ||
+					!(navMenu instanceof HTMLElement)
+				) return;
 
-				const mobileQuery = window.matchMedia("(max-width: 760px)");
+					const mobileQuery = window.matchMedia("(max-width: 760px)");
+					let lastScrollY = window.scrollY;
+					let ticking = false;
+					const hideAfter = 118;
 
-				const closeMenu = () => {
-					navToggle.setAttribute("aria-expanded", "false");
-					navToggle.setAttribute("aria-label", "Ouvrir le menu");
-					navMenu.classList.remove("is-open");
-				};
+					const applyHeaderState = () => {
+						const currentY = window.scrollY;
+						const delta = currentY - lastScrollY;
+						const menuOpen = navMenu.classList.contains("is-open");
 
-				const openMenu = () => {
-					navToggle.setAttribute("aria-expanded", "true");
-					navToggle.setAttribute("aria-label", "Fermer le menu");
-					navMenu.classList.add("is-open");
-				};
+						if (currentY > 12) {
+							siteHeader.classList.add("is-scrolled");
+						} else {
+							siteHeader.classList.remove("is-scrolled");
+						}
+
+						if (
+							!menuOpen &&
+							currentY > hideAfter &&
+							delta > 7
+						) {
+							siteHeader.classList.add("is-hidden");
+						} else if (delta < -5 || currentY <= hideAfter) {
+							siteHeader.classList.remove("is-hidden");
+						}
+
+						lastScrollY = currentY;
+						ticking = false;
+					};
+
+					const closeMenu = () => {
+						navToggle.setAttribute("aria-expanded", "false");
+						navToggle.setAttribute("aria-label", "Ouvrir le menu");
+						navMenu.classList.remove("is-open");
+						siteHeader.classList.remove("is-hidden");
+					};
+
+					const openMenu = () => {
+						navToggle.setAttribute("aria-expanded", "true");
+						navToggle.setAttribute("aria-label", "Fermer le menu");
+						navMenu.classList.add("is-open");
+						siteHeader.classList.remove("is-hidden");
+					};
 
 				navToggle.addEventListener("click", () => {
 					const isOpen = navMenu.classList.contains("is-open");
@@ -391,16 +430,28 @@ const websiteSchema = {
 					});
 				});
 
-				window.addEventListener("resize", () => {
-					if (!mobileQuery.matches) closeMenu();
-				});
+					window.addEventListener("resize", () => {
+						if (!mobileQuery.matches) closeMenu();
+					});
 
-				document.addEventListener("keydown", (event) => {
-					if (event.key !== "Escape") return;
-					closeMenu();
-				});
-			})();
-		</script>
+					window.addEventListener(
+						"scroll",
+						() => {
+							if (ticking) return;
+							ticking = true;
+							window.requestAnimationFrame(applyHeaderState);
+						},
+						{ passive: true }
+					);
+
+					document.addEventListener("keydown", (event) => {
+						if (event.key !== "Escape") return;
+						closeMenu();
+					});
+
+					applyHeaderState();
+				})();
+			</script>
 		<script is:inline>
 			(() => {
 				const cookieBanner = document.querySelector("[data-cookie-banner]");
