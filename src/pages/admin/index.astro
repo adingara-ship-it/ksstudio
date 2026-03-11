@@ -180,15 +180,10 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 			};
 
 			const readApiPayload = async (response) => {
-				const cloned = response.clone();
 				try {
-					return {
-						payload: await response.json(),
-						rawText: ""
-					};
+					return await response.json();
 				} catch {
-					const rawText = await cloned.text().catch(() => "");
-					return { payload: {}, rawText };
+					return {};
 				}
 			};
 
@@ -631,7 +626,7 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				const response = await fetch(`/api/admin/availability/${slotId}`, {
 					method: "DELETE"
 				});
-				const { payload: result, rawText } = await readApiPayload(response);
+				const result = await readApiPayload(response);
 				if (!response.ok) {
 					if (result?.error === "UNAUTHORIZED") {
 						setStatus(availabilityStatus, "Session expirée. Reconnectez-vous.", "error");
@@ -650,11 +645,9 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 						);
 						return;
 					}
-					const code = String(result?.error ?? `HTTP_${response.status}`);
-					const details = String(result?.details ?? rawText ?? "").trim();
 					setStatus(
 						availabilityStatus,
-						`Impossible de supprimer ce créneau (${code}${details ? `: ${details}` : ""}).`,
+						"Impossible de supprimer ce créneau pour le moment.",
 						"error"
 					);
 					return;
@@ -676,7 +669,7 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				const response = await fetch(`/api/admin/bookings/${bookingId}/cancel`, {
 					method: "POST"
 				});
-				const { payload: result, rawText } = await readApiPayload(response);
+				const result = await readApiPayload(response);
 				if (!response.ok) {
 					if (result?.error === "UNAUTHORIZED") {
 						setStatus(bookingStatus, "Session expirée. Reconnectez-vous.", "error");
@@ -696,13 +689,7 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 						await Promise.all([loadBookings(), loadAvailability()]);
 						return;
 					}
-					const code = String(result?.error ?? `HTTP_${response.status}`);
-					const details = String(result?.details ?? rawText ?? "").trim();
-					setStatus(
-						bookingStatus,
-						`Échec de l'annulation (${code}${details ? `: ${details}` : ""}).`,
-						"error"
-					);
+					setStatus(bookingStatus, "Échec de l'annulation. Réessayez.", "error");
 					return;
 				}
 
@@ -738,25 +725,18 @@ if (!isAdminAuthenticated(Astro.cookies)) {
 				let emailNote = emailSent ? " E-mail envoyé." : " E-mail non envoyé.";
 				if (!emailSent) {
 					const emailReason = String(result?.emailStatus?.reason ?? "");
-					const emailDetails = String(result?.emailStatus?.details ?? "").trim();
 					if (emailReason === "SMTP_NOT_CONFIGURED") {
-						emailNote = " E-mail non envoyé: configuration SMTP incomplète.";
+						emailNote = " E-mail non envoyé pour le moment.";
 					} else if (emailReason === "SMTP_AUTH_FAILED") {
-						emailNote = " E-mail non envoyé: authentification SMTP refusée.";
+						emailNote = " E-mail non envoyé pour le moment.";
 					} else if (emailReason === "SMTP_CONNECTION_FAILED") {
-						emailNote = " E-mail non envoyé: connexion SMTP impossible.";
+						emailNote = " E-mail non envoyé pour le moment.";
 					} else if (
 						emailReason === "CLIENT_MAIL_FAILED" ||
 						emailReason === "MAIL_SEND_FAILED" ||
 						emailReason === "SMTP_SEND_FAILED"
 					) {
 						emailNote = " E-mail non envoyé: serveur SMTP indisponible/refus.";
-					}
-					if (emailDetails) {
-						const shortDetails = emailDetails.length > 160
-							? `${emailDetails.slice(0, 160)}...`
-							: emailDetails;
-						emailNote += ` (${shortDetails})`;
 					}
 				}
 
